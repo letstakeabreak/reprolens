@@ -2,3 +2,33 @@ node_modules/
 temp/
 .DS_Store
 *.log
+.env*
+
+# Generated media (video & audio)
+*.mp4
+*.webm
+*.aac
+*.m4a
+*.wav
+*.aiff
+
+# Keep original tracked sample input
+!public/sample_videos/sample_bug.mp4
+!public/sample_videos/*.webm
+
+# Generated artifacts & recordings
+public/demo_recordings/
+public/previs_shots/
+output/
+research_reports/
+.agent-tasks/
+qwen3-english-tts/
+
+# Test screenshots
+public/screenshots/reproduced_*.png
+!public/screenshots/reproduced_bug.png
+public/screenshots/sim_*.png
+public/screenshots/*_test*.png
+public/screenshots/motion_review_*.png
+public/screenshots/previs_*.png
+

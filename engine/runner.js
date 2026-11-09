@@ -1,127 +1,151 @@
 const { chromium } = require('playwright');
+const { randomUUID } = require('crypto');
 const path = require('path');
 const fs = require('fs');
 
-/**
- * Executes the reproduction steps in a real headless browser.
- * @param {Array} steps - Detected UI actions
- * @param {Object} options - Execution options
- * @returns {Promise<{success: boolean, status: string, durationMs: number, logs: string[], screenshotUrl: string}>}
- */
-async function runReproduction(steps, options = {}) {
-  const startTime = Date.now();
-  const logs = [];
-  const addLog = (msg) => {
-    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
-    const line = `[+${elapsed}s] ${msg}`;
-    logs.push(line);
-    console.log(line);
-  };
+const ERROR_TEXT = 'Error 409 Conflict: Promotional coupon (SUMMER2026) cannot be combined with full loyalty point redemption.';
+const ACTION_TYPES = new Set(['navigate', 'fill', 'click', 'check', 'assert_visible']);
+const LOCATOR_FIELDS = ['selector', 'placeholder', 'role', 'name', 'text', 'labelText'];
 
-  const screenshotsDir = path.join(__dirname, '..', 'public', 'screenshots');
-  if (!fs.existsSync(screenshotsDir)) {
-    fs.mkdirSync(screenshotsDir, { recursive: true });
+// Only data is accepted. locatorStrategy is never interpreted as JavaScript.
+function validateActions(actions, targetUrl) {
+  if (!Array.isArray(actions) || actions.length === 0 || actions.length > 50) {
+    throw new TypeError('detectedActions must contain between 1 and 50 actions.');
   }
-
-  const screenshotFilename = `reproduced_${Date.now()}.png`;
-  const screenshotPath = path.join(screenshotsDir, screenshotFilename);
-  const screenshotUrl = `/screenshots/${screenshotFilename}`;
-
-  let browser;
-  try {
-    addLog('Launching headless Chromium runner (1280x720)...');
-    browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext({
-      viewport: { width: 1280, height: 720 }
-    });
-    const page = await context.newPage();
-
-    for (let i = 0; i < steps.length; i++) {
-      const step = steps[i];
-      const num = i + 1;
-      addLog(`[Step ${num}/${steps.length}] ${step.label || step.type}`);
-
-      switch (step.type) {
-        case 'navigate': {
-          const targetUrl = step.url || 'http://localhost:3000/checkout';
-          addLog(`  -> Navigating to ${targetUrl}`);
-          await page.goto(targetUrl, { waitUntil: 'domcontentloaded', timeout: 10000 });
-          await page.waitForTimeout(600);
-          break;
+  return actions.map((action) => {
+    if (!action || typeof action !== 'object' || !ACTION_TYPES.has(action.type)) {
+      throw new TypeError('Unsupported reproduction action.');
+    }
+    const clean = { type: action.type };
+    for (const key of [...LOCATOR_FIELDS, 'value', 'url']) {
+      if (action[key] !== undefined) {
+        if (typeof action[key] !== 'string' || action[key].length > 2000) {
+          throw new TypeError(`Action ${key} must be a string of at most 2000 characters.`);
         }
-        case 'fill': {
-          const selector = step.selector || '#coupon-input';
-          const val = step.value || '';
-          addLog(`  -> Filling input ${selector} with value "${val}"`);
-          await page.waitForSelector(selector, { state: 'visible', timeout: 5000 });
-          await page.fill(selector, val);
-          await page.waitForTimeout(400);
-          break;
-        }
-        case 'click': {
-          const selector = step.selector || 'button';
-          addLog(`  -> Clicking element ${selector}`);
-          await page.waitForSelector(selector, { state: 'visible', timeout: 5000 });
-          await page.click(selector);
-          await page.waitForTimeout(600);
-          break;
-        }
-        case 'check': {
-          const selector = step.selector || 'input[type="checkbox"]';
-          addLog(`  -> Checking checkbox ${selector}`);
-          await page.waitForSelector(selector, { state: 'visible', timeout: 5000 });
-          await page.check(selector);
-          await page.waitForTimeout(400);
-          break;
-        }
-        case 'assert_visible': {
-          const selector = step.selector || '#error-toast';
-          addLog(`  -> Asserting visibility of ${selector}`);
-          await page.waitForSelector(selector, { state: 'visible', timeout: 6000 });
-          const text = await page.innerText(selector);
-          addLog(`  -> Observed error text: "${text.trim()}"`);
-          if (step.text && !text.includes('409')) {
-            throw new Error(`Expected Error 409 text, but got: ${text}`);
-          }
-          addLog(`  -> Assertion MATCHED: Error 409 conflict state reproduced.`);
-          break;
-        }
-        default:
-          addLog(`  -> Unknown step type: ${step.type}`);
+        clean[key] = action[key];
       }
     }
+    if (clean.type === 'navigate') {
+      if (clean.url && clean.url !== targetUrl) {
+        throw new TypeError('Navigation is restricted to this server\'s checkout page.');
+      }
+      clean.url = targetUrl;
+    } else if (!LOCATOR_FIELDS.some((key) => key !== 'name' && clean[key])) {
+      throw new TypeError('Actions require a structured locator, not a locatorStrategy expression.');
+    }
+    return clean;
+  });
+}
 
-    addLog('Capturing high-resolution evidence screenshot...');
-    await page.screenshot({ path: screenshotPath, fullPage: true });
+async function resolveLocator(page, action) {
+  const candidates = [];
+  if (action.placeholder) candidates.push(page.getByPlaceholder(action.placeholder));
+  if (action.role) {
+    candidates.push(page.getByRole(action.role, action.name ? { name: action.name, exact: true } : {}));
+  }
+  if (action.labelText) candidates.push(page.getByLabel(action.labelText, { exact: true }));
+  if (action.text) candidates.push(page.getByText(action.text, { exact: action.type === 'click' }));
+  if (action.selector) candidates.push(page.locator(action.selector));
+  for (const candidate of candidates) {
+    if (await candidate.first().isVisible()) return candidate.first();
+  }
+  const fallback = candidates[candidates.length - 1].first();
+  await fallback.waitFor({ state: 'visible' });
+  return fallback;
+}
 
-    // Also keep a fixed named screenshot for static preview
-    const latestPath = path.join(screenshotsDir, 'reproduced_bug.png');
-    fs.copyFileSync(screenshotPath, latestPath);
+/** Replays validated actions on the local checkout; does not execute submitted code. */
+async function runReproduction(actions, options = {}) {
+  const targetUrl = options.targetUrl || 'http://localhost:3000/checkout';
+  const steps = validateActions(actions, targetUrl);
+  const timeoutMs = options.timeoutMs || 30000;
+  const startTime = Date.now();
+  const logs = [];
+  const addLog = (message) => logs.push(`[+${((Date.now() - startTime) / 1000).toFixed(2)}s] ${message}`);
+  const screenshotFilename = `reproduced_${randomUUID()}.png`;
+  const screenshotPath = path.join(__dirname, '..', 'public', 'screenshots', screenshotFilename);
+  let browser;
+  let timer;
+  let timedOut = false;
+  let succeeded = false;
 
-    const durationMs = Date.now() - startTime;
-    addLog(`Execution completed in ${(durationMs / 1000).toFixed(2)}s.`);
-    addLog('Status: 100% REPRODUCED (Exact visual and state match)');
+  try {
+    addLog('Launching headless Chromium to replay validated actions...');
+    browser = await chromium.launch({ headless: true, timeout: timeoutMs });
+    const execute = async () => {
+      const context = await browser.newContext({ viewport: { width: 1280, height: 720 }, serviceWorkers: 'block' });
+      // Requests and redirects are restricted to the local mock app.
+      await context.route('**/*', (route) => {
+        const url = new URL(route.request().url());
+        return url.origin === new URL(targetUrl).origin ? route.continue() : route.abort();
+      });
+      const page = await context.newPage();
+      page.setDefaultTimeout(5000);
+      page.setDefaultNavigationTimeout(5000);
+      page.on('dialog', (dialog) => dialog.dismiss());
+      await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
 
-    await browser.close();
+      for (let index = 0; index < steps.length; index++) {
+        if (timedOut) throw new Error('Reproduction timed out.');
+        const action = steps[index];
+        addLog(`[Step ${index + 1}/${steps.length}] ${action.type}`);
+        if (action.type === 'navigate') {
+          await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
+          continue;
+        }
+        const locator = await resolveLocator(page, action);
+        if (action.type === 'fill') await locator.fill(action.value || '');
+        if (action.type === 'click') await locator.click();
+        if (action.type === 'check') await locator.check();
+        if (action.type === 'assert_visible') {
+          await locator.waitFor({ state: 'visible' });
+          if (action.text && !(await locator.innerText()).includes(action.text)) {
+            throw new Error('The requested assertion text was not found.');
+          }
+        }
+      }
 
+      if (page.url() !== targetUrl) throw new Error('Reproduction left the checkout page.');
+      const banner = page.locator('#error-toast');
+      await banner.waitFor({ state: 'visible' });
+      if ((await banner.innerText()).trim() !== ERROR_TEXT || !(await page.locator('#btn-place-order').isDisabled())) {
+        throw new Error('The expected 409 banner and locked checkout button were not verified.');
+      }
+      if (timedOut) throw new Error('Reproduction timed out.');
+      fs.mkdirSync(path.dirname(screenshotPath), { recursive: true });
+      const screenshot = await page.screenshot({ path: screenshotPath, fullPage: true });
+      if (timedOut) throw new Error('Reproduction timed out.');
+      if (!fs.existsSync(screenshotPath) || screenshot.length < 8 || !fs.readFileSync(screenshotPath).equals(screenshot)) {
+        throw new Error('A fresh reproduction screenshot was not saved.');
+      }
+    };
+    const remainingMs = Math.max(1, timeoutMs - (Date.now() - startTime));
+    await Promise.race([
+      execute(),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          timedOut = true;
+          reject(new Error('Reproduction timed out.'));
+        }, remainingMs);
+      })
+    ]);
+    succeeded = true;
+    addLog('Status: ASSERTION PASSED (409 banner, locked button, and fresh screenshot verified)');
     return {
       success: true,
-      status: 'REPRODUCED',
-      durationMs,
-      logs,
-      screenshotUrl: '/screenshots/reproduced_bug.png'
-    };
-  } catch (err) {
-    if (browser) await browser.close();
-    addLog(`[ERROR] Reproduction runner failed: ${err.message}`);
-    return {
-      success: false,
-      status: 'FAILED',
+      status: 'ASSERTION_PASSED',
       durationMs: Date.now() - startTime,
       logs,
-      error: err.message
+      screenshotUrl: `/screenshots/${screenshotFilename}`
     };
+  } catch (err) {
+    addLog(`[ERROR] ${err.message}`);
+    return { success: false, status: 'FAILED', durationMs: Date.now() - startTime, logs, error: err.message };
+  } finally {
+    clearTimeout(timer);
+    if (browser) await browser.close().catch(() => {});
+    if (!succeeded) fs.rmSync(screenshotPath, { force: true });
   }
 }
 
-module.exports = { runReproduction };
+module.exports = { runReproduction, validateActions };

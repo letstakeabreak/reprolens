@@ -1,40 +1,50 @@
 # c0mpiled-17 Submission Package: ReproLens
 
 - **Event**: c0mpiled-17: Seoul
-- **Track**: Developer Productivity & AI-Native Quality Engineering (Y Combinator RFS)
-- **GitHub Repository**: https://github.com/letstakeabreak/reprolens
-- **Target Submission Form Time**: 1:30 PM KST
+- **Theme**: YC RFS Fall 2026 theme list. No closest-fit theme is claimed.
+- **GitHub**: https://github.com/letstakeabreak/reprolens
+- **Video rule**: 2 minutes or less. Loom or YouTube is the recommended host. This script targets 110 seconds and stays under 120.
+- **Build window**: ends 15:00 KST. Form clock is unconfirmed. Do not treat 1:30 PM as the deadline.
+- **Judging**: 15:00 to 17:00 KST. A live demo in that window is optional.
+- **Commits**: commits before the 10:00 KST build start are ineligible. The first commit on this repo is 10:33 KST.
 
 ---
 
-## 1. Short Project Description (For Google Form)
+## 1. Form text
 
-### One-Sentence Pitch
-> **ReproLens turns ambiguous 10-second user bug screen recordings into executable, self-contained Playwright test specs in seconds.**
+### One sentence
 
-### Short Description (Form Text)
-Software engineers waste over 20.4% of sprint time manually guessing and recreating bug reports sent as vague chat recordings ("the checkout button froze"). ReproLens eliminates reproduction guesswork with zero client-side instrumentation: simply drop a 10-second video into the dashboard. 
+ReproLens turns a short bug recording of one checkout page into a Playwright script and runs it.
 
-Our multimodal vision pipeline samples keyframes at 2fps, reconstructs the precise user interaction timeline, and synthesizes a production-grade Playwright E2E test script (`.spec.js`) equipped with resilient semantic locators (`getByPlaceholder`, `getByRole`, `getByText`) and fallback chains. A built-in headless Chromium runner then drives the browser through the exact user sequence to recreate the bug and capture screenshot evidence in under 4 seconds. No SDK required, zero guesswork, instant regression assets.
+### Short description
 
----
+Minwoo gets a few seconds of screen recording and one sentence: the checkout button froze. He cannot tell whether the coupon or the points came first.
 
-## 2. 90-Second English Demo Video Script
+ReproLens plays that clip, samples frames with FFmpeg, and writes a Playwright script with semantic locators and a CSS fallback. Headless Chromium runs the script against a mock checkout page and stops on the red error banner.
 
-| Timecode | Visual Screen Action | Voiceover Script (English) |
-| :--- | :--- | :--- |
-| **00:00 - 00:18** | Zoom into Slack showing an ambiguous 7-second user clip: "Checkout button is dead." | *"Every software engineer dreads this Slack message: an 8-second video of an impossible-to-reproduce bug, eating up hours of your sprint trying to guess what the user clicked."* |
-| **00:18 - 00:35** | Open ReproLens Studio. Show the video loaded. Click "Analyze Video & Synthesize Playwright Spec". | *"Meet ReproLens. Drop the raw video recording into ReproLens Studio. In seconds, our multimodal vision pipeline breaks down keyframes at 2 frames per second to track every input, click, and UI state transition."* |
-| **00:35 - 01:05** | Right column reveals synthesized Playwright code. Highlight semantic locators. Click "Run Reproduction in Headless Browser". Terminal streams live logs. | *"ReproLens instantly synthesizes an executable, self-contained Playwright test spec. Notice the resilient semantic locators—getByPlaceholder, getByRole, and getByLabel—with automated fallback chains. Watch as our headless runner drives the browser to recreate the exact sequence."* |
-| **01:05 - 01:30** | Green status badge "100% Reproduced" turns on. Side-by-side comparison shows the exact red Error 409 Conflict toast and frozen button. | *"In just 3.2 seconds, the bug is reproduced with a 100% visual and state match. No SDKs bundled into production. No guesswork. Turn every user bug report into an instant regression test asset. This is ReproLens."* |
+The vision step calls a model only when `GEMINI_API_KEY` is set. Otherwise it uses a fixed sequence for this checkout. The demo is that one page, `public/checkout.html`. Ordinary HTML controls only. Canvas and WebGL are out of scope.
 
 ---
 
-## 3. Checklist for 1:30 PM Form
+## 2. Demo script (110 seconds, 4MAT)
 
-- [x] Working Web App: ReproLens Studio running locally at `http://localhost:3000`
-- [x] Target Checkout App with reproducible Error 409 bug at `http://localhost:3000/checkout`
-- [x] GitHub Repository created & pushed: `https://github.com/letstakeabreak/reprolens`
-- [x] Synthesizer unit and end-to-end test suite verified (`node engine/test_synthesizer.js` passing 4/4)
-- [x] High-resolution demo walkthrough video generated (`public/reprolens_demo_walkthrough.mp4`)
-- [ ] Make repository public via `gh repo edit --visibility public` when ready to submit at 1:30 PM.
+| Time | Share | Visual | Voice |
+|---|---|---|---|
+| 00:00–00:22 | Why 20% | Slack to Minwoo, then the 7.3s clip. Coupon, points, red banner, locked button. No statistic on screen. | "Minwoo is a frontend engineer. Every week he gets a clip like this and no steps. Coupon, points, and the button stops. The clip never says which came first." |
+| 00:22–00:44 | What 20% | One sentence, then the Studio screen with the clip on the left and the script on the right. | "ReproLens turns that clip into a Playwright script. This is the whole screen." |
+| 00:44–01:28 | How 40% | Upload or load the sample, frames at 2 fps, six steps, the generated script, headless run, red banner beside frame 13. | "Load the recording. FFmpeg splits it into frames. Six steps follow, from the coupon to the red banner. A vision model runs only when an API key is set. Otherwise this checkout sequence is a fixture. Those steps become a Playwright script. Chromium runs it on the mock checkout. The red banner is back, and the button stays locked." |
+| 01:28–01:50 | What if 20% | One line on keeping the script, then the limit, then the repo URL. | "That script is what he can keep. Today this is one checkout form, HTML only. The code is at github.com/letstakeabreak/reprolens." |
+
+Spoken length is about half the 110 seconds. The rest is the screen.
+
+---
+
+## 3. Checklist
+
+- [x] Studio at `http://localhost:3000`
+- [x] Mock checkout at `http://localhost:3000/checkout`
+- [x] GitHub repo exists: `https://github.com/letstakeabreak/reprolens` (still private; do not flip visibility from this pass)
+- [x] `node engine/test_synthesizer.js` was reported passing earlier in the day. This docs pass did not re-run it.
+- [ ] Submission video, 2 minutes or less, on Loom or YouTube. The 110-second script above is not rendered yet. Files named `reprolens_previs_90s.mp4` and `reprolens_motion_previs_90s.mp4` are earlier cuts.
+- [ ] Public GitHub URL on the form. Visibility change is waiting on a separate decision.
+- [ ] Form submit. Clock unconfirmed. Build ends 15:00 KST.

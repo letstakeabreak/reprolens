@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReproLens motion</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0A0B0D;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      color: #1D1D1F;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* The stage is always 1280x720. Record mode scales it to 1920x1080. */
+    #stage {
+      position: relative;
+      width: 1280px;
+      height: 720px;
+      overflow: hidden;
+      background: #F5F5F7;
+      border-radius: 12px;
+    }
+
+    body.record { display: block; background: #F5F5F7; overflow: hidden; }
+    body.record #stage { border-radius: 0; transform: scale(1.5); transform-origin: 0 0; }
+    body.record #controls { display: none; }
+
+    .layer {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      pointer-events: none;
+    }
+    .layer.on { opacity: 1; }
+
+    .ease { transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }
+
+    /* ---------- 1. Phone in hand ---------- */
+    #s1 { background: rgb(243, 243, 243); }
+
+    .hand {
+      position: absolute;
+      left: -31px;
+      top: -81px;
+      width: 1362px;
+      height: 894px;
+    }
+    .hand img { width: 100%; height: 100%; display: block; }
+
+    .phone-screen {
+      position: absolute;
+      left: 38.87%;
+      top: 15.18%;
+      width: 20.80%;
+      height: 68.45%;
+      border-radius: 30px;
+      overflow: hidden;
+      background: #FFFFFF;
+    }
+
+    .chat-head {
+      padding: 40px 14px 10px;
+      border-bottom: 1px solid #E5E5E7;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .chat-head small { display: block; font-size: 11px; font-weight: 400; color: #8E8E93; margin-top: 2px; }
+
+    .msg {
+      padding: 12px 12px 0;
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .msg.in { opacity: 1; transform: none; }
+
+    .msg-top { display: flex; align-items: center; gap: 8px; }
+    .avatar {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: #2E7D6B; color: #FFF;
+      font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .msg-name { font-size: 12px; font-weight: 700; }
+    .msg-time { font-size: 10px; color: #8E8E93; margin-left: 4px; font-weight: 400; }
+    .msg-text { font-size: 12px; line-height: 1.4; margin: 6px 0 8px; color: #1D1D1F; }
+
+    .clip {
+      position: relative;
+      width: 100%;
+      height: 262px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #E5E5E7;
+      background: #FFF;
+    }
+    /* Show the 680px checkout column of the 1280x720 recording. */
+    .clip video {
+      position: absolute;
+      width: 482px;
+      height: 271px;
+      left: -113px;
+      top: -4px;
+    }
+
+    /* ---------- 2. One sentence, then the laptop ---------- */
+    #s2 { background: rgb(245, 245, 245); }
+
+    #s2-zoom {
+      position: absolute;
+      inset: 0;
+      transform-origin: 640px 370px;
+      transition: transform 2.4s cubic-bezier(0.65, 0, 0.35, 1);
+    }
+    #s2-zoom.zoom { transform: scale(2.95); }
+
+    #hook {
+      position: absolute;
+      left: 0; right: 0;
+      top: 322px;
+      text-align: center;
+      font-size: 60px;
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      opacity: 0;
+      transition: opacity 0.6s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #hook.in { opacity: 1; }
+    #hook.up { transform: translateY(-276px) scale(0.6); }
+    #hook.gone { opacity: 0; }
+
+    #laptop {
+      position: absolute;
+      left: 210px;
+      top: 125px;
+      width: 860px;
+      height: 579px;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #laptop.in { opacity: 1; transform: none; }
+    #laptop > img { width: 100%; height: 100%; display: block; }
+
+    .laptop-screen {
+      position: absolute;
+      left: 24.5%;
+      top: 18.2%;
+      width: 51%;
+      height: 48.5%;
+      overflow: hidden;
+      background: #FFF;
+    }
+    .laptop-screen img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+
+    /* ---------- 3. Frames leave the phone ---------- */
+    #s3 { background: #F5F5F7; }
+
+    #s3-phone {
+      position: absolute;
+      left: 545px;
+      top: 70px;
+      width: 190px;
+      height: 300px;
+      border-radius: 30px;
+      border: 8px solid #1D1D1F;
+      background: #FFF;
+      overflow: hidden;
+      transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.6s ease;
+    }
+    #s3-phone img { position: absolute; height: 100%; left: 50%; transform: translateX(-50%); }
+    #s3-phone.leave { transform: translateY(-80px); opacity: 0; }
+
+    #reel { position: absolute; inset: 0; transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
+    #reel.up { transform: translateY(-150px); }
+
+    .frame {
+      position: absolute;
+      top: 440px;
+      width: 74px;
+      opacity: 0;
+      transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease, box-shadow 0.4s ease, filter 0.4s ease;
+    }
+    .frame img {
+      width: 74px;
+      height: 42px;
+      object-fit: cover;
+      display: block;
+      border-radius: 4px;
+      border: 1px solid #D2D2D7;
+      background: #FFF;
+    }
+    .frame span { display: block; text-align: center; font-size: 10px; color: #8E8E93; margin-top: 4px; font-variant-numeric: tabular-nums; }
+    .frame.out { opacity: 1; }
+    .frame.dim { opacity: 0.3; }
+    .frame.key img { border: 2px solid #0071E3; }
+    .frame.key { transform: translateY(-10px) !important; }
+
+    /* ---------- 4. Steps, code, real run ---------- */
+    #s4 { background: #F5F5F7; }
+
+    .steps { position: absolute; left: 40px; top: 40px; width: 560px; display: flex; flex-direction: column; gap: 10px; }
+    .step {
+      display: flex; align-items: center; gap: 14px;
+      background: #FFF;
+      border: 1px solid #E5E5E7;
+      border-radius: 12px;
+      padding: 8px 14px 8px 8px;
+      font-size: 15px;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.5s ease, transform 0.6s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s ease;
+    }
+    .step.in { opacity: 1; transform: none; }
+    .step.now { border-color: #0071E3; }
+    .step img { width: 80px; height: 45px; object-fit: cover; border-radius: 6px; border: 1px solid #E5E5E7; display: block; }
+
+    .code {
+      position: absolute;
+      left: 40px; top: 352px;
+      width: 560px; height: 220px;
+      background: #1D1D1F;
+      border-radius: 12px;
+      padding: 22px 18px;
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+      font-size: 12.5px;
+      line-height: 1;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .line {
+      color: #4A4A50;
+      white-space: nowrap;
+      padding: 8px 8px;
+      border-radius: 6px;
+      transition: color 0.3s ease, background-color 0.3s ease;
+    }
+    .line.lit { color: #F5F5F7; }
+    .line.now { background: rgba(0, 113, 227, 0.28); }
+    .line.lit .k { color: #FF7AB2; }
+    .line.lit .s { color: #FC6A5D; }
+    .line.lit .f { color: #67B7A4; }
+
+    #result {
+      position: absolute;
+      left: 40px; top: 594px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #248A3D;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+    #result.in { opacity: 1; }
+
+    .window {
+      position: absolute;
+      left: 630px; top: 150px;
+      width: 610px;
+      background: #FFF;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 16px 40px rgba(0,0,0,0.12);
+    }
+    .window-bar {
+      height: 34px;
+      background: #ECECEE;
+      display: flex; align-items: center; gap: 7px;
+      padding: 0 12px;
+      font-size: 12px; color: #6E6E73;
+    }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .window-bar .t { margin-left: 10px; }
+    .window video { width: 610px; height: 343px; display: block; }
+
+    /* ---------- 5. Banners overlap ---------- */
+    #s5 { background: #F5F5F7; }
+
+    .shot {
+      position: absolute;
+      top: 180px;
+      width: 560px;
+      height: 315px;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.10);
+      transition: left 1.6s cubic-bezier(0.65, 0, 0.35, 1), top 1.6s cubic-bezier(0.65, 0, 0.35, 1),
+                  width 1.6s cubic-bezier(0.65, 0, 0.35, 1), height 1.6s cubic-bezier(0.65, 0, 0.35, 1),
+                  opacity 1.6s ease;
+    }
+    .shot img { width: 100%; height: 100%; display: block; }
+    #shot-a { left: 60px; }
+    #shot-b { left: 660px; }
+    #s5.merge .shot { left: 256px; top: 110px; width: 768px; height: 432px; }
+    #s5.merge #shot-b { opacity: 0.5; }
+
+    .shot-label {
+      position: absolute;
+      top: 512px;
+      width: 560px;
+      text-align: center;
+      font-size: 15px;
+      color: #6E6E73;
+      transition: opacity 0.6s ease;
+    }
+    #label-a { left: 60px; }
+    #label-b { left: 660px; }
+    #s5.merge .shot-label { opacity: 0; }
+
+    #end {
+      position: absolute; inset: 0;
+      background: #F5F5F7;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    #end.in { opacity: 1; }
+    #end h1 { font-size: 56px; font-weight: 700; letter-spacing: -0.035em; }
+    #end p { font-size: 18px; color: #6E6E73; }
+
+    /* ---------- Player (hidden when recording) ---------- */
+    #controls {
+      width: 1280px;
+      display: flex; align-items: center; gap: 16px;
+      color: #F5F5F7; font-size: 13px;
+    }
+    #play {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: none; background: #F5F5F7; color: #1D1D1F;
+      font-size: 13px; cursor: pointer;
+    }
+    #track { flex: 1; height: 4px; background: #3A3A3C; border-radius: 2px; position: relative; cursor: pointer; }
+    #fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: #F5F5F7; border-radius: 2px; }
+    #clock { font-variant-numeric: tabular-nums; min-width: 90px; text-align: right; }
+  </style>
+</head>
+<body>
+  <div id="stage">
+
+    <!-- 1. Phone in hand: the clip arrives and stops on 409 -->
+    <div id="s1" class="layer on">
+      <div class="hand">
+        <img src="/assets/iphone_in_hand.jpg" alt="">
+        <div class="phone-screen">
+          <div class="chat-head"># checkout-support<small>Support team</small></div>
+          <div id="msg" class="msg">
+            <div class="msg-top">
+              <div class="avatar">J</div>
+              <div class="msg-name">Jenny<span class="msg-time">9:41 PM</span></div>
+            </div>
+            <div class="msg-text">A customer says checkout froze at payment. This is all they sent.</div>
+            <div class="clip">
+              <video id="v1" src="/sample_videos/sample_bug.mp4" muted playsinline preload="auto"></video>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. One sentence, then into the laptop -->
+    <div id="s2" class="layer">
+      <div id="s2-zoom">
+        <div id="hook">Turn that clip into a test.</div>
+        <div id="laptop">
+          <img src="/assets/laptop_front_view.jpg" alt="">
+          <div class="laptop-screen"><img src="/previs_shots/studio_initial.png" alt=""></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Frames leave the phone and line up -->
+    <div id="s3" class="layer">
+      <div id="s3-phone"><img src="/extracted_frames/frame_015.jpg" alt=""></div>
+      <div id="reel"></div>
+    </div>
+
+    <!-- 4. Steps sit down, four lines light up, the checkout is clicked -->
+    <div id="s4" class="layer">
+      <div class="steps">
+        <div class="step" id="st1"><img src="/extracted_frames/frame_005.jpg" alt="">Type SUMMER2026 into the promo code</div>
+        <div class="step" id="st2"><img src="/extracted_frames/frame_006.jpg" alt="">Click Apply</div>
+        <div class="step" id="st3"><img src="/extracted_frames/frame_008.jpg" alt="">Check Redeem full loyalty points</div>
+        <div class="step" id="st4"><img src="/extracted_frames/frame_010.jpg" alt="">Click Place Order</div>
+      </div>
+      <div class="code">
+        <div class="line" id="ln1"><span class="k">await</span> page.<span class="f">getByPlaceholder</span>(<span class="s">'Enter coupon code'</span>).<span class="f">fill</span>(<span class="s">'SUMMER2026'</span>);</div>
+        <div class="line" id="ln2"><span class="k">await</span> page.<span class="f">getByRole</span>(<span class="s">'button'</span>, { name: <span class="s">'Apply'</span> }).<span class="f">click</span>();</div>
+        <div class="line" id="ln3"><span class="k">await</span> page.<span class="f">getByRole</span>(<span class="s">'checkbox'</span>).<span class="f">check</span>();</div>
+        <div class="line" id="ln4"><span class="k">await</span> page.<span class="f">getByRole</span>(<span class="s">'button'</span>, { name: <span class="s">'Place Order'</span> }).<span class="f">click</span>();</div>
+      </div>
+      <div id="result">The same 409 alert appeared.</div>
+      <div class="window">
+        <div class="window-bar">
+          <span class="dot" style="background:#FF5F57"></span>
+          <span class="dot" style="background:#FEBC2E"></span>
+          <span class="dot" style="background:#28C840"></span>
+          <span class="t">localhost:3000/checkout</span>
+        </div>
+        <video id="v4" src="/demo_recordings/repro_run.mp4" muted playsinline preload="auto"></video>
+      </div>
+    </div>
+
+    <!-- 5. The two red banners land on the same spot, then hold -->
+    <div id="s5" class="layer">
+      <div class="shot" id="shot-a"><img src="/demo_recordings/customer_final.png" alt=""></div>
+      <div class="shot" id="shot-b"><img src="/demo_recordings/repro_final.png" alt=""></div>
+      <div class="shot-label" id="label-a">Customer's recording</div>
+      <div class="shot-label" id="label-b">ReproLens run</div>
+      <div id="end">
+        <h1>ReproLens</h1>
+        <p>github.com/letstakeabreak/reprolens</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="controls">
+    <button id="play" type="button">▶</button>
+    <div id="track"><div id="fill"></div></div>
+    <div id="clock">0:00 / 1:46</div>
+  </div>
+
+  <audio id="narration" src="/motion_audio.m4a" preload="auto"></audio>
+
+  <script>
+    const DURATION = 106;
+
+    // Timeline (seconds)
+    const T = {
+      s2: 16, s3: 27, s4: 46, s5: 88,
+      msgIn: 1.0, clipStart: 2.5,                  // 1
+      hookIn: 16.4, hookUp: 19.5, laptopIn: 19.8, hookGone: 22.6, zoom: 23.2, // 2
+      frameStart: 28.2, frameGap: 0.6, phoneLeave: 38.0, reelUp: 38.4, keys: 40.0, // 3
+      runStart: 49.0, actions: [3, 11, 19, 27], result: 78.0,  // 4 (actions are clip seconds)
+      merge: 92.0, endCard: 98.0                   // 5
+    };
+    const KEY_FRAMES = [4, 5, 7, 9]; // zero-based: frames 5, 6, 8, 10
+
+    const $ = (id) => document.getElementById(id);
+    const on = (el, cls, cond) => el.classList.toggle(cls, !!cond);
+
+    const params = new URLSearchParams(location.search);
+    if (params.get('record') === '1') document.body.classList.add('record');
+
+    // Build the reel: 15 frames that start at the phone and end in a row.
+    const reel = $('reel');
+    const frames = [];
+    const PHONE_CX = 640, PHONE_CY = 220;
+    for (let i = 0; i < 15; i++) {
+      const el = document.createElement('div');
+      el.className = 'frame';
+      const left = 43 + i * 80;
+      el.style.left = left + 'px';
+      el.innerHTML = `<img src="/extracted_frames/frame_${String(i + 1).padStart(3, '0')}.jpg" alt=""><span>${(i * 0.5).toFixed(1)}s</span>`;
+      const dx = PHONE_CX - (left + 37);
+      const dy = PHONE_CY - (440 + 28);
+      el.dataset.start = `translate(${dx}px, ${dy}px) scale(0.5)`;
+      el.style.transform = el.dataset.start;
+      reel.appendChild(el);
+      frames.push(el);
+    }
+
+    function syncVideo(v, t, playing) {
+      const dur = isFinite(v.duration) ? v.duration : 1e9;
+      const end = dur - 0.05;
+      if (t <= 0) {
+        if (!v.paused) v.pause();
+        if (v.currentTime > 0.05) v.currentTime = 0;
+        return;
+      }
+      if (t >= end) {
+        if (!v.paused) v.pause();
+        if (Math.abs(v.currentTime - end) > 0.1) v.currentTime = end;
+        return;
+      }
+      if (playing) {
+        if (v.paused) { v.currentTime = t; v.play().catch(() => {}); }
+        else if (Math.abs(v.currentTime - t) > 0.3) v.currentTime = t;
+      } else {
+        if (!v.paused) v.pause();
+        if (Math.abs(v.currentTime - t) > 0.04) v.currentTime = t;
+      }
+    }
+
+    let playing = false;
+    let now = 0;
+    let startPerf = 0, startAt = 0;
+
+    function render(t) {
+      now = Math.max(0, Math.min(DURATION, t));
+      $('fill').style.width = (now / DURATION * 100) + '%';
+      const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+      $('clock').textContent = `${fmt(now)} / ${fmt(DURATION)}`;
+
+      const scene = now < T.s2 ? 1 : now < T.s3 ? 2 : now < T.s4 ? 3 : now < T.s5 ? 4 : 5;
+      ['s1', 's2', 's3', 's4', 's5'].forEach((id, i) => on($(id), 'on', scene === i + 1));
+
+      // 1
+      on($('msg'), 'in', now >= T.msgIn);
+      syncVideo($('v1'), scene === 1 ? now - T.clipStart : 99, playing && scene === 1);
+
+      // 2
+      on($('hook'), 'in', now >= T.hookIn);
+      on($('hook'), 'up', now >= T.hookUp);
+      on($('hook'), 'gone', now >= T.hookGone);
+      on($('laptop'), 'in', now >= T.laptopIn);
+      on($('s2-zoom'), 'zoom', now >= T.zoom);
+
+      // 3
+      frames.forEach((el, i) => {
+        const out = now >= T.frameStart + i * T.frameGap;
+        on(el, 'out', out);
+        el.style.transform = out ? 'none' : el.dataset.start;
+        const keysOn = now >= T.keys;
+        on(el, 'key', keysOn && KEY_FRAMES.includes(i));
+        on(el, 'dim', keysOn && !KEY_FRAMES.includes(i));
+      });
+      on($('s3-phone'), 'leave', now >= T.phoneLeave);
+      on($('reel'), 'up', now >= T.reelUp);
+
+      // 4
+      const clipT = now - T.runStart;
+      syncVideo($('v4'), scene === 4 ? clipT : 0, playing && scene === 4);
+      T.actions.forEach((a, i) => {
+        const n = i + 1;
+        const next = T.actions[i + 1] ?? 999;
+        on($('st' + n), 'in', clipT >= a - 1.6);
+        on($('st' + n), 'now', clipT >= a - 1.6 && clipT < next - 1.6 && now < T.result);
+        on($('ln' + n), 'lit', clipT >= a - 0.4);
+        on($('ln' + n), 'now', clipT >= a - 0.4 && clipT < next - 0.4 && now < T.result);
+      });
+      on($('result'), 'in', now >= T.result);
+
+      // 5
+      on($('s5'), 'merge', now >= T.merge);
+      on($('end'), 'in', now >= T.endCard);
+    }
+
+    const audio = $('narration');
+
+    function tick() {
+      if (!playing) return;
+      const t = startAt + (performance.now() - startPerf) / 1000;
+      if (t >= DURATION) { render(DURATION); pause(); return; }
+      render(t);
+      requestAnimationFrame(tick);
+    }
+
+    function play() {
+      if (now >= DURATION) now = 0;
+      playing = true;
+      $('play').textContent = '❚❚';
+      startAt = now;
+      startPerf = performance.now();
+      window.__playStartEpoch = Date.now();
+      if (!document.body.classList.contains('record')) {
+        audio.currentTime = now;
+        audio.play().catch(() => {});
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function pause() {
+      playing = false;
+      $('play').textContent = '▶';
+      audio.pause();
+      render(now);
+    }
+
+    function seekTo(s) {
+      const was = playing;
+      if (was) pause();
+      render(s);
+      audio.currentTime = s;
+      if (was) play();
+    }
+
+    $('play').addEventListener('click', () => (playing ? pause() : play()));
+    $('track').addEventListener('click', (e) => {
+      const r = $('track').getBoundingClientRect();
+      seekTo((e.clientX - r.left) / r.width * DURATION);
+    });
+
+    // Resolves once every image and video on the page can be shown.
+    window.__ready = Promise.all([
+      ...[...document.images].map((img) => img.complete ? Promise.resolve() : new Promise((r) => { img.onload = r; img.onerror = r; })),
+      ...[...document.querySelectorAll('video')].map((v) => v.readyState >= 3 ? Promise.resolve() : new Promise((r) => v.addEventListener('canplaythrough', r, { once: true })))
+    ]);
+
+    window.seekTo = seekTo;
+    window.play = play;
+    render(0);
+  </script>
+</body>
+</html>

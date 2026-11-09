@@ -281,7 +281,7 @@
       <span style="font-size: 12px; color: var(--text-secondary);">Specification & Architecture</span>
     </div>
     <div class="nav-links">
-      <a href="/previs" class="btn-secondary" style="background-color: #FDEDED; color: #E0382E; border-color: #F8C8C6; font-weight: 600;">90s Demo Previs</a>
+      <a href="/previs" class="btn-secondary" style="background-color: #FDEDED; color: #E0382E; border-color: #F8C8C6; font-weight: 600;">Demo Previs</a>
       <a href="/" class="btn-secondary">Studio Dashboard</a>
       <a href="/checkout" target="_blank" class="btn-secondary">Checkout WebApp</a>
     </div>
@@ -365,14 +365,14 @@
             <li class="task-item">
               <span class="task-status-tag status-done">DONE</span>
               <div>
-                <strong>Node.js 26 Toolchain Provisioning</strong>
+                <strong>Node.js toolchain</strong>
                 <div style="font-size: 12px; color: var(--text-secondary);">Homebrew automated install (`/opt/homebrew/bin/node`)</div>
               </div>
             </li>
             <li class="task-item">
               <span class="task-status-tag status-done">DONE</span>
               <div>
-                <strong>Playwright AST Code Synthesizer</strong>
+                <strong>Playwright code synthesizer</strong>
                 <div style="font-size: 12px; color: var(--text-secondary);">`engine/synthesizer.js` with semantic locators & fallback chains</div>
               </div>
             </li>
@@ -443,10 +443,10 @@
 
           <!-- STAGE 3: Multimodal Vision Engine -->
           <rect x="420" y="40" width="160" height="120" rx="12" fill="#F5F5F7" stroke="#E5E5E7" stroke-width="1.5"/>
-          <text x="500" y="70" font-size="14" font-weight="700" fill="#1F2123" text-anchor="middle">3. Vision Engine</text>
-          <text x="500" y="95" font-size="12" fill="#6E6E73" text-anchor="middle">Multimodal Action Mapper</text>
-          <text x="500" y="115" font-size="11" fill="#8E8E93" text-anchor="middle">Frame Diff & State</text>
-          <text x="500" y="135" font-size="11" fill="#0B65DF" text-anchor="middle">Normalized JSON</text>
+          <text x="500" y="70" font-size="14" font-weight="700" fill="#1F2123" text-anchor="middle">3. Actions</text>
+          <text x="500" y="95" font-size="12" fill="#6E6E73" text-anchor="middle">Model if API key set</text>
+          <text x="500" y="115" font-size="11" fill="#8E8E93" text-anchor="middle">Else checkout fixture</text>
+          <text x="500" y="135" font-size="11" fill="#0B65DF" text-anchor="middle">Action list JSON</text>
 
           <!-- Connector 3 -> 4 -->
           <line x1="580" y1="100" x2="620" y2="100" stroke="#8E8E93" stroke-width="2" marker-end="url(#arrow)"/>
@@ -456,7 +456,7 @@
           <rect x="630" y="48" width="140" height="20" rx="4" fill="#FDEDED"/>
           <text x="700" y="62" font-size="10" font-weight="700" fill="#E0382E" text-anchor="middle">OFFLOADED TO MINI</text>
           <text x="700" y="85" font-size="13" font-weight="700" fill="#1F2123" text-anchor="middle">4. Code Synthesizer</text>
-          <text x="700" y="105" font-size="11" fill="#6E6E73" text-anchor="middle">AST Playwright Generator</text>
+          <text x="700" y="105" font-size="11" fill="#6E6E73" text-anchor="middle">Playwright script</text>
           <text x="700" y="123" font-size="11" fill="#288C44" text-anchor="middle">Semantic Locators</text>
           <text x="700" y="140" font-size="10" fill="#8E8E93" text-anchor="middle">Fallback Chain</text>
 
@@ -467,8 +467,8 @@
           <rect x="820" y="40" width="160" height="120" rx="12" fill="#F5F5F7" stroke="#E5E5E7" stroke-width="1.5"/>
           <text x="900" y="70" font-size="14" font-weight="700" fill="#1F2123" text-anchor="middle">5. Headless Runner</text>
           <text x="900" y="95" font-size="12" fill="#6E6E73" text-anchor="middle">Playwright Chromium</text>
-          <text x="900" y="115" font-size="11" fill="#288C44" text-anchor="middle">100% Bug Reproduced</text>
-          <text x="900" y="135" font-size="11" fill="#0B65DF" text-anchor="middle">Execution: ~3.2s</text>
+          <text x="900" y="115" font-size="11" fill="#288C44" text-anchor="middle">Red error banner</text>
+          <text x="900" y="135" font-size="11" fill="#0B65DF" text-anchor="middle">Screenshot saved</text>
 
           <!-- Feedback / Target Loop -->
           <path d="M 900 160 L 900 240 L 100 240 L 100 200" fill="none" stroke="#E5E5E7" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow)"/>
@@ -477,10 +477,8 @@
 
           <!-- Bottom Summary Box: Red Highlight on Offloaded Module -->
           <rect x="20" y="280" width="960" height="60" rx="10" fill="#FBFBFC" stroke="#E5E5E7"/>
-          <text x="40" y="305" font-size="13" font-weight="700" fill="#1F2123">Core Architectural Win:</text>
-          <text x="40" y="325" font-size="12" fill="#6E6E73">No client-side SDK needed. Transforms raw visual pixels into durable, maintainable regression test code for CI/CD.</text>
-          <rect x="780" y="295" width="180" height="30" rx="6" fill="#E8F5E9"/>
-          <text x="870" y="314" font-size="12" font-weight="700" fill="#288C44" text-anchor="middle">VERIFIED WORKING</text>
+          <text x="40" y="305" font-size="13" font-weight="700" fill="#1F2123">Demo scope:</text>
+          <text x="40" y="325" font-size="12" fill="#6E6E73">No SDK on the page under test. One mock checkout. Vision model only when GEMINI_API_KEY is set.</text>
         </svg>
       </div>
     </section>
@@ -510,15 +508,15 @@
           </tr>
           <tr>
             <td><span class="method-badge method-post">POST</span> <code>/api/synthesize</code></td>
-            <td>Parses extracted frames, infers user action sequence, and synthesizes Playwright test script.</td>
+            <td>Builds an action list from the vision model when GEMINI_API_KEY is set, otherwise from the checkout fixture, then writes a Playwright script.</td>
             <td>None (reads current extracted frames)</td>
             <td><code>{ success: true, analysis: {...}, code: "..." }</code></td>
           </tr>
           <tr>
             <td><span class="method-badge method-post">POST</span> <code>/api/run-reproduce</code></td>
-            <td>Spawns headless Chromium, executes the synthesized sequence, asserts Error 409, and captures evidence screenshot.</td>
+            <td>Opens the mock checkout in headless Chromium, runs the steps, and saves a screenshot of the red error banner.</td>
             <td><code>{ detectedActions: [...] }</code></td>
-            <td><code>{ success: true, status: "REPRODUCED", durationMs: 3209, logs: [...], screenshotUrl: "..." }</code></td>
+            <td><code>{ success, status, durationMs, logs, screenshotUrl }</code></td>
           </tr>
           <tr>
             <td><span class="method-badge method-get">GET</span> <code>/api/sample-video</code></td>
@@ -528,7 +526,7 @@
           </tr>
           <tr>
             <td><span class="method-badge method-get">GET</span> <code>/checkout</code></td>
-            <td>Serves the mock e-commerce checkout web application with the built-in Error 409 conflict bug.</td>
+            <td>Serves the mock checkout. Combining the sample coupon and full points shows a red error banner and locks the button. That banner is page text, not a captured HTTP status.</td>
             <td>None</td>
             <td>HTML5 Web Application</td>
           </tr>
@@ -546,7 +544,7 @@
       <div class="card">
         <div class="card-title">Problem Statement</div>
         <div class="card-desc">
-          Software engineers spend <strong>20.4% of every sprint</strong> manually guessing and reproducing bug reports submitted as vague screen recordings. <strong>42% of front-end bugs</strong> are delayed or closed as "Cannot Reproduce" due to missing interaction context.
+          A bug report arrives as a few seconds of screen recording and one sentence. The engineer cannot see the order of clicks, so they guess.
         </div>
 
         <div class="card-title" style="margin-top: 16px;">Target Personas</div>
@@ -555,11 +553,13 @@
           2. <strong>Solo Technical Founder</strong>: Lacks QA resources; needs automated regression assets from real user bug videos.
         </div>
 
-        <div class="card-title" style="margin-top: 16px;">Success Metrics for 90-Second Hackathon Demo</div>
+        <div class="card-title" style="margin-top: 16px;">What the demo has to show</div>
         <div class="card-desc">
-          - <strong>Analysis Speed</strong>: Extract frames & synthesize test spec in &lt; 5 seconds.<br>
-          - <strong>Execution Reliability</strong>: Headless browser reproduces the exact visual 409 error in &lt; 4 seconds.<br>
-          - <strong>Code Quality</strong>: Synthesized Playwright code is 100% self-contained with semantic locators and fallback chains.
+          - Frames come out of the sample recording.<br>
+          - A Playwright script is written from the action list.<br>
+          - Headless Chromium opens the mock checkout and the red error banner is on screen.<br>
+          - The vision step uses a model only when <code>GEMINI_API_KEY</code> is set. Otherwise the checkout fixture is used.<br>
+          - Submission video target is 110 seconds, and must stay at or under 2 minutes.
         </div>
       </div>
     </section>

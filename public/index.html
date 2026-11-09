@@ -72,7 +72,7 @@
       margin: 0 auto;
       padding: 32px 24px;
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 32px;
     }
     @media (max-width: 1024px) {
@@ -84,6 +84,7 @@
       display: flex;
       flex-direction: column;
       gap: 24px;
+      min-width: 0;
     }
     .card {
       background-color: var(--surface);
@@ -154,8 +155,10 @@
       font-size: 13px;
       line-height: 1.5;
       overflow-x: auto;
-      max-height: 380px;
-      white-space: pre;
+      overflow-y: auto;
+      max-height: 360px;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
     .terminal-container {
       background-color: #121314;
@@ -338,9 +341,10 @@
 
       <div class="card">
         <div class="card-header">
-          <span class="card-title">3. Detected User Action Sequence</span>
+          <span class="card-title">3. Mapped Checkout Action Sequence</span>
+          <span id="vision-source-badge" class="badge">Fixture (no API key)</span>
         </div>
-        <p class="card-desc">Normalized interaction sequence inferred frame-by-frame by the multimodal vision model.</p>
+        <p class="card-desc">Six checkout actions mapped to the extracted keyframe timestamps (0.0s to 6.0s).</p>
         <div id="action-steps-container">
           <div style="color: var(--text-tertiary); font-size: 14px; padding: 12px 0;">
             Interaction steps will appear here after analysis.
@@ -366,7 +370,15 @@
 // await page.getByRole('button', { name: 'Place Order' }).click();
 // await expect(page.getByRole('alert')).toBeVisible();</div>
 
-        <div style="margin-top: 16px;">
+        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+            <label for="runner-target-select" style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Target Environment:</label>
+            <select id="runner-target-select" style="flex: 1; height: 38px; border-radius: 8px; border: 1px solid var(--divider); padding: 0 10px; font-size: 13px; background: var(--bg); color: var(--text-primary); font-family: inherit;">
+              <option value="web">Web Headless (Chromium)</option>
+              <option value="ios-sim" id="opt-ios-sim">iOS Simulator (iPhone 16 Safari)</option>
+            </select>
+          </div>
+          <div id="target-status-note" style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;"></div>
           <button type="button" id="btn-run-test" class="btn-primary" disabled>
             <span id="run-btn-text">Run Reproduction in Headless Browser</span>
           </button>
@@ -375,10 +387,13 @@
 
       <div class="card">
         <div class="card-header">
-          <span class="card-title">5. Live Runner Terminal & Visual Verification</span>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <span class="card-title">5. Live Runner Terminal & Visual Verification</span>
+            <span id="active-runner-badge" class="badge">Web Headless</span>
+          </div>
           <span id="repro-status-badge" class="status-pill pending">Idle</span>
         </div>
-        <p class="card-desc">Headless Chromium replicates the exact user sequence to confirm bug reproducibility.</p>
+        <p id="runner-desc-text" class="card-desc">Headless Chromium replays validated actions and verifies the reproduced bug state.</p>
         
         <div id="terminal" class="terminal-container">[SYSTEM] ReproLens Headless Runner ready.
 [SYSTEM] Awaiting test execution...</div>
@@ -445,21 +460,49 @@
 
         if (synthData.code) {
           codeEditor.textContent = synthData.code;
-          currentActions = synthData.analysis.detectedActions;
+          currentActions = synthData.analysis ? synthData.analysis.detectedActions : [];
+
+          // Update vision provenance badge honestly
+          const visionBadge = document.getElementById('vision-source-badge');
+          if (visionBadge) {
+            const isModel = (synthData.source === 'vision-model') || (synthData.analysis && synthData.analysis.source === 'vision-model');
+            if (isModel && synthData.analysis && synthData.analysis.incomplete) {
+              visionBadge.className = 'badge';
+              visionBadge.textContent = 'Vision model, incomplete';
+            } else if (isModel) {
+              visionBadge.className = 'badge active';
+              visionBadge.textContent = 'Vision model';
+            } else {
+              visionBadge.className = 'badge';
+              visionBadge.textContent = 'Fixture (no API key)';
+            }
+          }
 
           // Render detected steps
-          actionStepsContainer.innerHTML = '';
+          actionStepsContainer.replaceChildren();
           currentActions.forEach(act => {
             const stepEl = document.createElement('div');
             stepEl.className = 'action-step-item';
-            stepEl.innerHTML = `
-              <div class="step-badge">${act.step}</div>
-              <div class="step-text">
-                <div style="font-weight: 600;">${act.label}</div>
-                <div style="font-size: 13px; color: var(--text-secondary);">${act.description}</div>
-              </div>
-              <div class="step-time">${act.timestamp}</div>
-            `;
+
+            const stepBadge = document.createElement('div');
+            stepBadge.className = 'step-badge';
+            stepBadge.textContent = act.step ?? '';
+
+            const stepText = document.createElement('div');
+            stepText.className = 'step-text';
+            const stepLabel = document.createElement('div');
+            stepLabel.style.fontWeight = '600';
+            stepLabel.textContent = act.label || act.type || '';
+            const stepDescription = document.createElement('div');
+            stepDescription.style.fontSize = '13px';
+            stepDescription.style.color = 'var(--text-secondary)';
+            stepDescription.textContent = act.description ?? '';
+            stepText.append(stepLabel, stepDescription);
+
+            const stepTime = document.createElement('div');
+            stepTime.className = 'step-time';
+            stepTime.textContent = act.timestamp ?? '';
+            stepEl.append(stepBadge, stepText, stepTime);
             actionStepsContainer.appendChild(stepEl);
           });
 
@@ -479,10 +522,61 @@
       setTimeout(() => { btnCopyCode.textContent = 'Copy Code'; }, 2000);
     });
 
+    const runnerTargetSelect = document.getElementById('runner-target-select');
+    const optIosSim = document.getElementById('opt-ios-sim');
+    const targetStatusNote = document.getElementById('target-status-note');
+    const activeRunnerBadge = document.getElementById('active-runner-badge');
+    const runnerDescText = document.getElementById('runner-desc-text');
+
+    async function checkDeviceStatus() {
+      try {
+        const res = await fetch('/api/device-status');
+        const data = await res.json();
+        if (!data.available) {
+          if (optIosSim) {
+            optIosSim.disabled = true;
+            optIosSim.textContent = `iOS Simulator (Disabled: ${data.reason})`;
+          }
+          if (targetStatusNote) {
+            targetStatusNote.textContent = `Note: iOS Simulator is currently unavailable (${data.reason}). Defaulting to Web Headless.`;
+          }
+        } else {
+          if (optIosSim) {
+            optIosSim.disabled = false;
+            optIosSim.textContent = 'iOS Simulator (iPhone 16 Safari ready)';
+          }
+          if (targetStatusNote) {
+            targetStatusNote.textContent = 'iPhone 16 Simulator (iOS 18.0) is booted and idb bridge is connected.';
+          }
+        }
+      } catch (_) {}
+    }
+    checkDeviceStatus();
+
+    if (runnerTargetSelect) {
+      runnerTargetSelect.addEventListener('change', () => {
+        const isIos = runnerTargetSelect.value === 'ios-sim';
+        if (isIos) {
+          runBtnText.textContent = 'Run Reproduction on iOS Simulator';
+          if (activeRunnerBadge) activeRunnerBadge.textContent = 'iOS Simulator';
+          if (runnerDescText) runnerDescText.textContent = 'Mobile Safari on iPhone 16 Simulator driven via Facebook idb.';
+        } else {
+          runBtnText.textContent = 'Run Reproduction in Headless Browser';
+          if (activeRunnerBadge) activeRunnerBadge.textContent = 'Web Headless';
+          if (runnerDescText) runnerDescText.textContent = 'Headless Chromium replays validated actions and verifies the reproduced bug state.';
+        }
+      });
+    }
+
     btnRunTest.addEventListener('click', async () => {
       btnRunTest.disabled = true;
-      runBtnText.textContent = 'Executing in Headless Browser...';
-      terminal.textContent = '[RUNNER] Starting Playwright test execution...\n';
+      const selectedTarget = runnerTargetSelect ? runnerTargetSelect.value : 'web';
+      const isIos = selectedTarget === 'ios-sim';
+
+      runBtnText.textContent = isIos ? 'Executing on iOS Simulator...' : 'Executing in Headless Browser...';
+      terminal.textContent = isIos
+        ? '[RUNNER] Initializing iOS Simulator Safari reproduction via idb...\n'
+        : '[RUNNER] Starting validated action replay...\n';
       reproStatusBadge.className = 'status-pill pending';
       reproStatusBadge.textContent = 'Running';
 
@@ -490,31 +584,52 @@
         const res = await fetch('/api/run-reproduce', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ detectedActions: currentActions })
+          body: JSON.stringify({
+            detectedActions: currentActions,
+            target: selectedTarget
+          })
         });
         const result = await res.json();
+        if (!res.ok) {
+          throw new Error(result.error || `Reproduction request failed (HTTP ${res.status})`);
+        }
 
         if (result.logs) {
           terminal.textContent = result.logs.join('\n');
           terminal.scrollTop = terminal.scrollHeight;
         }
 
-        if (result.success && result.status === 'REPRODUCED') {
+        if (result.device && activeRunnerBadge) {
+          activeRunnerBadge.textContent = result.device;
+        }
+
+        if (result.success && (result.status === 'ASSERTION_PASSED' || result.status === 'REPRODUCED')) {
           reproStatusBadge.className = 'status-pill success';
-          reproStatusBadge.textContent = '100% Reproduced';
+          reproStatusBadge.textContent = isIos
+            ? 'Assertion Passed (Error 409 on iOS Simulator)'
+            : 'Assertion Passed (Error 409 Banner Verified)';
           reproducedImg.src = result.screenshotUrl + '?t=' + Date.now();
           reproducedImg.style.opacity = '1';
+        } else if (result.status === 'UNAVAILABLE') {
+          reproStatusBadge.className = 'status-pill';
+          reproStatusBadge.style.backgroundColor = '#FFF3E0';
+          reproStatusBadge.style.color = '#E65100';
+          reproStatusBadge.textContent = 'Simulator Unavailable';
         } else {
           reproStatusBadge.className = 'status-pill';
           reproStatusBadge.style.backgroundColor = '#FDEDED';
           reproStatusBadge.style.color = '#E0382E';
-          reproStatusBadge.textContent = 'Failed';
+          reproStatusBadge.textContent = 'Assertion Failed';
         }
       } catch (err) {
         terminal.textContent += `\n[ERROR] ${err.message}`;
+        reproStatusBadge.className = 'status-pill';
+        reproStatusBadge.style.backgroundColor = '#FDEDED';
+        reproStatusBadge.style.color = '#E0382E';
+        reproStatusBadge.textContent = 'Assertion Failed';
       } finally {
         btnRunTest.disabled = false;
-        runBtnText.textContent = 'Rerun Reproduction';
+        runBtnText.textContent = isIos ? 'Rerun on iOS Simulator' : 'Rerun Reproduction';
       }
     });
   </script>

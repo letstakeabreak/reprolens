@@ -1,138 +1,113 @@
-# ReproLens: Vision-to-Code Bug Reproduction Agent
+# ReproLens
 
-> **Turn ambiguous 10-second user bug screen recordings into executable, self-contained Playwright test specs in seconds.** Built for **c0mpiled-17: Seoul** (Hosted by Transpose Platform, Y Combinator RFS track).
+> Turn a short bug screen recording into a Playwright script you can run locally. Built for **c0mpiled-17: Seoul**. The event uses the YC RFS Fall 2026 theme list. This project does not claim a closest-fit theme.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Playwright](https://img.shields.io/badge/Playwright-E2E-2EAD33.svg)](https://playwright.dev)
-[![Node.js](https://img.shields.io/badge/Node.js-26-green.svg)](https://nodejs.org)
 
 ---
 
-## 0. The Problem: "Cannot Reproduce"
+## The problem
 
-Engineering teams waste over **20.4% of their working hours** diagnosing and reproducing ambiguous user bug reports [1]. QA teams or customers routinely drop an 8-second smartphone recording into Slack with a single sentence: *"The checkout button froze."* 
-
-Developers then spend hours manually guessing:
-- Did they enter the coupon before or after checking the loyalty points box?
-- What exact text caused the validation conflict?
-- Why does it work on the developer's local machine?
-
-Over **42.0% of reported frontend bugs** are delayed or marked *"Cannot Reproduce"* simply due to lost reproduction context [2].
+A teammate drops a few seconds of screen recording into chat and writes one line: "the checkout button froze." The person who has to fix it, here a frontend engineer named Minwoo, cannot see the order of clicks. Coupon first, or points first. The clip does not say.
 
 ---
 
-## 1. What ReproLens Does
+## What ReproLens does
 
-ReproLens eliminates manual reproduction guesswork:
-1. **Drop Any Recording**: Drop a 10-second screen capture (`.mp4`, `.webm`) into the ReproLens Studio dashboard. No client-side SDK or instrumentation required.
-2. **Keyframe Sampling**: FFmpeg samples key interaction frames at 2fps, detecting cursor movements, inputs, button clicks, and error toasts.
-3. **Multimodal Action Inference**: Vision models map visual frame transitions into a normalized UI action sequence JSON.
-4. **Resilient Playwright Synthesis**: The synthesizer generates production-grade Playwright E2E scripts with semantic locators (`getByPlaceholder`, `getByRole`, `getByText`) and robust CSS fallback chains.
-5. **Instant Local Execution**: A headless Chromium runner executes the synthesized script, driving the browser through the exact user sequence to recreate the bug and capture evidence screenshots.
+The demo runs against one mock checkout page, `public/checkout.html`.
+
+1. **Load a recording.** The studio plays the included sample. A video file can be sent to the extract endpoint. No SDK is added to the page under test.
+2. **Sample frames.** FFmpeg writes JPEG frames at 2 fps.
+3. **Actions.** If `GEMINI_API_KEY` is set, the vision step sends frames to the model. If it is not set, or the call fails, the action list is a fixed checkout fixture. Another pass is wiring that branch. This document describes that behavior.
+4. **Script.** The synthesizer turns the action list into a Playwright script with semantic locators (`getByPlaceholder`, `getByRole`, `getByText`) and a CSS fallback.
+5. **Run.** Headless Chromium replays the validated action list against the mock checkout. Success requires the exact 409 banner, a disabled order button, and a new screenshot saved for that run. The execution API does not accept JavaScript code or evaluate locator expressions.
 
 ```
-[User Video: "Checkout stuck"]
-        │
-        ▼ (FFmpeg 2fps Keyframe Sampler)
-[Visual Frames Reel]
-        │
-        ▼ (Multimodal Vision Engine)
-[Normalized UI Action Sequence JSON]
-        │
-        ▼ (AST Playwright Synthesizer)
-[Self-contained `reproduced_bug.spec.js`]
-        │
-        ▼ (Headless Chromium Runner)
-[100% Recreated Bug State + Screenshot Evidence]
+[Sample bug video]
+        |
+        v  FFmpeg, 2 fps
+[JPEG frames]
+        |
+        v  vision model if GEMINI_API_KEY is set, otherwise checkout fixture
+[Action list] ---- synthesizer.js ----> [Playwright script for local export]
+        |
+        v  validated replay in headless Chromium, public/checkout.html
+[Screenshot of the red error banner]
 ```
 
 ---
 
-## 2. Key Differentiators
+## Limits
 
-| Feature | Replay.io | Jam.dev | Generic LLM Chat | **ReproLens** |
-| :--- | :--- | :--- | :--- | :--- |
-| **Input Required** | Heavy client runtime SDK | Chrome extension installed | Detailed natural language prompt | **Single video file only** |
-| **Output Type** | Memory recording file | Network/console logs | Raw code snippets | **Runnable Playwright E2E test script** |
-| **Zero SDK Overhead** | ❌ (Must bundle SDK) | ❌ (Requires extension) | N/A | **✅ (100% Zero SDK)** |
-| **Automated Replay** | ❌ (Manual timeline scrub) | ❌ (Manual inspection) | ❌ (Manual prompt tuning) | **✅ (Automated browser execution)** |
-| **Regression Ready** | ❌ | ❌ | Partial | **✅ (Ready for CI/CD)** |
+- One mock app in this demo: `public/checkout.html`.
+- The flow is for ordinary HTML controls. Canvas and WebGL are not supported.
+- FFmpeg must be installed (`brew install ffmpeg`).
+- A real vision pass needs `GEMINI_API_KEY`. Without it, the checkout fixture is used.
+- The server binds to `127.0.0.1` and rejects other hosts and cross-origin requests. It is a local tool. CLI requests without an Origin header are allowed.
+- Web reproduction runs have a 30-second limit and accept only structured actions targeting this checkout. Generated scripts remain available for local export.
 
 ---
 
-## 3. Architecture
+## Layout
 
 ```
-reprolens/
 ├── engine/
-│   ├── frame_extractor.js     # FFmpeg 2fps keyframe extractor
-│   ├── vision_analyzer.js     # Multimodal action sequence generator
-│   ├── synthesizer.js         # Playwright code synthesis engine with semantic locators
-│   ├── runner.js              # Headless Chromium reproduction runner
-│   └── test_synthesizer.js    # Comprehensive test & verification suite
+│   ├── frame_extractor.js
+│   ├── vision_analyzer.js
+│   ├── synthesizer.js
+│   ├── runner.js
+│   └── test_synthesizer.js
 ├── public/
-│   ├── index.html             # ReproLens Studio Web Dashboard (Apple Design System compliant)
-│   ├── checkout.html          # Target mock ecommerce checkout webapp with reproducible 409 bug
-│   ├── sample_videos/         # Real 7.3s sample checkout bug recording
-│   └── screenshots/           # Captured bug reproduction screenshots
+│   ├── index.html
+│   ├── checkout.html
+│   ├── previs.html
+│   ├── spec.html
+│   ├── sample_videos/
+│   ├── screenshots/
+│   └── extracted_frames/
 ├── scripts/
-│   └── record_bug_video.js    # Programmatic browser recording pipeline
-└── server.js                  # Express API & static server
+│   └── record_bug_video.js
+├── server.js
+├── STORYBOARD.md
+├── SUBMISSION.md
+└── LICENSE
 ```
 
 ---
 
-## 4. Getting Started
+## Getting started
 
-### Prerequisites
-- Node.js >= 20
-- FFmpeg (`brew install ffmpeg`)
-
-### Installation & Launch
+Node.js 20 or newer, and FFmpeg.
 
 ```bash
-# Clone the repository
 git clone https://github.com/letstakeabreak/reprolens.git
 cd reprolens
-
-# Install dependencies
 npm install
-
-# Install Playwright browser
 npx playwright install chromium
-
-# Start ReproLens Studio
 node server.js
 ```
 
-1. Open **ReproLens Studio**: [`http://localhost:3000`](http://localhost:3000)
-2. View **Target Checkout App**: [`http://localhost:3000/checkout`](http://localhost:3000/checkout)
-3. Click **"Analyze Video & Synthesize Playwright Spec"** to parse the 7.3-second bug video.
-4. Click **"Run Reproduction in Headless Browser"** to watch the browser reproduce the Error 409 state in ~3.2 seconds.
-
----
-
-## 5. Running the Test Suite
+1. Studio: [http://localhost:3000](http://localhost:3000)
+2. Mock checkout: [http://localhost:3000/checkout](http://localhost:3000/checkout)
+3. Analyze the sample recording.
+4. Run the reproduction. Chromium opens the mock checkout and stops on the red error banner.
 
 ```bash
-node engine/test_synthesizer.js
+npm test
+env -u GEMINI_API_KEY node engine/test_synthesizer.js
 ```
-Verifies:
-- Semantic locator synthesis (`getByPlaceholder`, `getByRole`, `getByText`)
-- Live headless browser reproduction against `checkout.html`
-- Fallback chain activation when semantic locators are absent
-- Visual screenshot capture
+
+`npm test` checks the API boundary, rejected executable payloads, real Chromium reproduction, false success cases, screenshot failures, and timeout cleanup. The separate synthesizer suite checks code generation, semantic locators, the CSS fallback, and screenshot saving.
 
 ---
 
-## 6. References
+## Demo length
 
-1. **Cambridge Judge Business School (2020)**, *The Financial and Time Costs of Software Debugging on Global Enterprise Engineering Teams*, Cambridge University Press.
-2. **Atlassian Jira State of Software Quality Report (2023)**, *Analysis of Unresolved Bug Tickets: Why Cannot Reproduce is the Top Developer Complaint*, Atlassian Research.
-3. **LogRocket & Datadog Developer Survey (2024)**, *Client-side SDK Overhead and Privacy Compliance Barriers in Modern Enterprise Web Apps*, TechTarget Publications.
+The submission video must be 2 minutes or less. The storyboard in `STORYBOARD.md` and `public/previs.html` targets 110 seconds.
 
 ---
 
 ## License
 
-MIT License. Developed for c0mpiled-17: Seoul.
+MIT. See [LICENSE](LICENSE). Copyright 2026 letstakeabreak.

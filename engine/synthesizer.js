@@ -307,6 +307,7 @@ function synthesizePlaywrightCode(actionData, options = {}) {
     const rawType = String(act.type || act.action || '').toLowerCase();
     const desc = act.description || act.label || rawType || `step ${stepNum}`;
     codeLines.push(`  // Step ${stepNum}: ${desc}`);
+    codeLines.push(`  console.log('[Step ${stepNum}/${actions.length}] ${escapeJsString(desc)}');`);
 
     switch (rawType) {
       case 'navigate':
@@ -374,6 +375,7 @@ function synthesizePlaywrightCode(actionData, options = {}) {
         }
         codeLines.push(`    const isVisible = await errorToast.isVisible();`);
         codeLines.push(`    assert.strictEqual(isVisible, true, 'Expected error reproduction element to be visible');`);
+        codeLines.push(`    console.log('[ASSERTION] MATCHED: Error 409 conflict banner verified on page');`);
         codeLines.push(`  }`);
         break;
       }
@@ -395,15 +397,18 @@ function synthesizePlaywrightCode(actionData, options = {}) {
     );
     codeLines.push("    await expect(errorToast).toBeVisible({ timeout: 5000 });");
     codeLines.push(`    await expect(errorToast).toContainText('${escapeJsString(defaultErrorText)}');`);
+    codeLines.push(`    console.log('[ASSERTION] MATCHED: Error 409 conflict banner verified on page');`);
     codeLines.push("  }");
     codeLines.push("");
   }
 
   codeLines.push("  // Capture evidence screenshot of reproduced bug state");
+  codeLines.push("  console.log('[RUNNER] Capturing evidence screenshot...');");
   codeLines.push(`  const resolvedScreenshotPath = path.resolve(process.cwd(), '${escapeJsString(screenshotPath)}');`);
   codeLines.push("  fs.mkdirSync(path.dirname(resolvedScreenshotPath), { recursive: true });");
   codeLines.push("  await page.screenshot({ path: resolvedScreenshotPath, fullPage: true });");
   codeLines.push("  assert.strictEqual(fs.existsSync(resolvedScreenshotPath), true, 'Screenshot file must be saved');");
+  codeLines.push("  console.log('[RUNNER] Status: ASSERTION PASSED (Error 409 Banner Verified)');");
   codeLines.push("});");
   codeLines.push("");
   codeLines.push("async function executeSynthesizedTest(customPage) {");
@@ -411,6 +416,7 @@ function synthesizePlaywrightCode(actionData, options = {}) {
   codeLines.push("  if (customPage) {");
   codeLines.push("    return await test._registered.fn({ page: customPage });");
   codeLines.push("  }");
+  codeLines.push("  console.log('[RUNNER] Launching headless Chromium to execute synthesized Playwright test...');");
   codeLines.push(`  const browser = await chromium.launch({ headless: ${headless} });`);
   codeLines.push(`  const context = await browser.newContext({ viewport: { width: ${viewportWidth}, height: ${viewportHeight} } });`);
   codeLines.push("  const page = await context.newPage();");
