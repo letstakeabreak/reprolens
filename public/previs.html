@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ReproLens - 4MAT 90s Demo Video Previs Player</title>
+  <title>ReproLens - 4MAT 90s Demo Video Previs Player (Presenter Mode)</title>
   <style>
     :root {
       --bg: #000000;
@@ -117,15 +117,71 @@
       opacity: 1;
       transform: scale(1);
     }
+    /* Loom-Style Presenter Bubble */
+    .presenter-bubble {
+      position: absolute;
+      bottom: 96px;
+      left: 32px;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 3px solid #FFFFFF;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      overflow: hidden;
+      background-color: #1F2123;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .presenter-bubble.full-focus {
+      width: 220px;
+      height: 220px;
+      bottom: auto;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      border-width: 4px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+    }
+    .webcam-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
+    .presenter-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #A1A1A6;
+      font-size: 12px;
+      text-align: center;
+      padding: 10px;
+    }
+    .presenter-badge {
+      position: absolute;
+      bottom: 6px;
+      background-color: rgba(0, 0, 0, 0.7);
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+    /* Slide Content Overlay */
     .slide-content-overlay {
       position: absolute;
       inset: 0;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 28px 32px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.9) 100%);
+      padding: 24px 32px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.92) 100%);
       pointer-events: none;
+      z-index: 20;
     }
     .overlay-top {
       display: flex;
@@ -158,13 +214,13 @@
       background-color: rgba(0, 0, 0, 0.88);
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 12px;
-      padding: 14px 24px;
+      padding: 12px 24px;
       text-align: center;
       max-width: 860px;
       margin: 0 auto;
     }
     .caption-text {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 600;
       color: #FFFFFF;
       letter-spacing: -0.01em;
@@ -173,7 +229,7 @@
     .citation-tag {
       font-size: 11px;
       color: #79C0FF;
-      margin-top: 6px;
+      margin-top: 4px;
       letter-spacing: 0.02em;
       font-weight: 600;
     }
@@ -242,6 +298,26 @@
     }
     .btn-play:hover {
       background-color: var(--accent-hover);
+    }
+    .btn-cam {
+      height: 42px;
+      padding: 0 16px;
+      background-color: var(--surface-light);
+      color: var(--text-primary);
+      border: 1px solid var(--divider);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn-cam.active {
+      background-color: #FDEDED;
+      color: #E0382E;
+      border-color: #F8C8C6;
     }
     .btn-icon {
       width: 36px;
@@ -341,7 +417,7 @@
   <header>
     <div class="logo-group">
       <span class="logo-text">ReproLens</span>
-      <span class="badge active">4MAT 90s Previs Director Player</span>
+      <span class="badge active">4MAT 90s Presenter Previs Player</span>
     </div>
     <div style="display: flex; gap: 8px;">
       <a href="/" class="nav-btn">Studio Console</a>
@@ -352,9 +428,19 @@
   <div class="previs-viewport">
     <!-- Screen Stage (16:9) -->
     <div class="screen-stage" id="screen-stage">
+      <!-- Loom-Style Live Presenter Webcam Bubble -->
+      <div class="presenter-bubble" id="presenter-bubble">
+        <video id="webcam-feed" class="webcam-video" autoplay playsinline muted style="display: none;"></video>
+        <div id="presenter-placeholder" class="presenter-placeholder">
+          <span style="font-size: 32px;">👤</span>
+          <span style="font-size: 10px; margin-top: 4px;">PRESENTER</span>
+        </div>
+        <div class="presenter-badge" id="bubble-badge">YOU (LIVE)</div>
+      </div>
+
       <!-- 4MAT Act 1: Why (0:00 - 0:18, 20%) - Minwoo's Pain & 20.4% [Problem-Solution Clarity] -->
       <div class="slide-media active" id="slide-1" style="background: radial-gradient(circle at center, #1E1F24 0%, #0F1012 100%); display: flex; align-items: center; justify-content: center; flex-direction: column;">
-        <div style="background-color: #1F2123; border: 1px solid #38383A; border-radius: 14px; padding: 24px; width: 680px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+        <div style="background-color: #1F2123; border: 1px solid #38383A; border-radius: 14px; padding: 24px; width: 680px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); margin-left: 100px;">
           <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
             <div style="display: flex; align-items: center; gap: 10px;">
               <div style="width: 32px; height: 32px; background-color: #E0382E; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #FFF;">#</div>
@@ -386,7 +472,7 @@
 
       <!-- 4MAT Act 3: How (0:36 - 1:12, 40%) - Live Presentation Weapon [Technical Execution] -->
       <div class="slide-media" id="slide-3" style="background: #121314; display: flex; align-items: center; justify-content: center; padding: 30px;">
-        <div style="width: 100%; max-width: 860px; background-color: #1F2123; border: 1px solid #38383A; border-radius: 12px; padding: 20px; font-family: monospace; font-size: 13px; line-height: 1.5; color: #E5E5E7;">
+        <div style="width: 100%; max-width: 860px; background-color: #1F2123; border: 1px solid #38383A; border-radius: 12px; padding: 20px; font-family: monospace; font-size: 13px; line-height: 1.5; color: #E5E5E7; margin-left: 80px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #2C2C2E; padding-bottom: 8px;">
             <span style="color: #2F7CF6; font-weight: 700;">// Synthesized with Semantic Locators + Automated Fallback Chain</span>
             <span style="color: #32D74B; font-size: 11px;">[RUNNER: PASS 3.21s]</span>
@@ -461,6 +547,10 @@
             <span id="play-icon">▶</span>
             <span id="play-label">Play 4MAT Previs (90s)</span>
           </button>
+          <button type="button" class="btn-cam" id="btn-toggle-webcam">
+            <span>📷</span>
+            <span id="cam-label">Enable Webcam Rehearsal</span>
+          </button>
           <button type="button" class="btn-icon" id="btn-mute" title="Toggle Voiceover Audio">🔊</button>
           <button type="button" class="btn-icon" id="btn-reset" title="Restart">↺</button>
         </div>
@@ -496,20 +586,17 @@
       <div class="notes-card">
         <div class="notes-title">
           <span>🎯</span>
-          <span>4MAT Hackathon Structure & Criteria Mapping</span>
+          <span>Presenter On-Camera Instructions</span>
         </div>
         <div class="notes-content">
           <p style="margin-bottom: 8px;">
-            <strong>Why (20% | 0:00~0:18)</strong>: Minwoo's real pain. Verified number: <strong>20.4% sprint loss</strong> [Cambridge Judge, 2020]. No greetings. -> <em>Problem Clarity</em>
+            <strong>Founder Credibility (Why & Outro)</strong>: During Why (0:00~0:18) and Outro (1:12~1:30), look directly into the camera lens with high conviction. It proves this is an authentic project built with deep engineering passion.
           </p>
           <p style="margin-bottom: 8px;">
-            <strong>What (20% | 0:18~0:36)</strong>: One sentence ("video to Playwright code with zero SDKs") and only ONE screen (Studio). -> <em>Problem-Solution Clarity</em>
-          </p>
-          <p style="margin-bottom: 8px;">
-            <strong>How (40% | 0:36~1:12)</strong>: Live presentation weapon. Drops video, decomposes keyframes, synthesizes code, runs in headless browser in 3.21s with Error 409 verified. -> <em>Technical Execution</em>
+            <strong>Loom-Style Screen Narration (How)</strong>: During How (0:36~1:12), your circular bubble stays in the bottom-left corner. Narrate smoothly as the Playwright code synthesizes and the browser executes.
           </p>
           <p>
-            <strong>What if (20% | 1:12~1:30)</strong>: Impact at scale, honest limits (HTML DOM vs canvas/backend), and GitHub repository link. -> <em>Creativity & Impact</em>
+            <strong>Practice With Live Camera</strong>: Click <strong>"Enable Webcam Rehearsal"</strong> above to test your eye line and timing with your actual Mac camera before the 1:30 PM submission!
           </p>
         </div>
       </div>
@@ -583,6 +670,7 @@
     let timerId = null;
     let isMuted = false;
     let currentActIndex = -1;
+    let webcamStream = null;
 
     const btnTogglePlay = document.getElementById('btn-toggle-play');
     const playIcon = document.getElementById('play-icon');
@@ -597,6 +685,11 @@
     const captionText = document.getElementById('caption-text');
     const citationTag = document.getElementById('citation-tag');
     const cutPills = document.querySelectorAll('.cut-pill');
+    const presenterBubble = document.getElementById('presenter-bubble');
+    const btnToggleWebcam = document.getElementById('btn-toggle-webcam');
+    const webcamFeed = document.getElementById('webcam-feed');
+    const presenterPlaceholder = document.getElementById('presenter-placeholder');
+    const camLabel = document.getElementById('cam-label');
 
     function formatTime(s) {
       const mins = Math.floor(s / 60);
@@ -630,6 +723,23 @@
         for (let i = 1; i <= 4; i++) {
           const s = document.getElementById(`slide-${i}`);
           if (s) s.classList.toggle('active', i === (validIndex + 1));
+        }
+
+        // Adjust presenter bubble focus depending on the Act
+        // Act 1 (Why) & Act 4 (Outro): Presenter takes larger prominent bubble
+        if (validIndex === 0) {
+          presenterBubble.className = 'presenter-bubble';
+          presenterBubble.style.width = '160px';
+          presenterBubble.style.height = '160px';
+        } else if (validIndex === 3) {
+          presenterBubble.className = 'presenter-bubble';
+          presenterBubble.style.width = '170px';
+          presenterBubble.style.height = '170px';
+        } else {
+          // Act 2 & 3: Standard clean 130px corner bubble
+          presenterBubble.className = 'presenter-bubble';
+          presenterBubble.style.width = '130px';
+          presenterBubble.style.height = '130px';
         }
 
         // Update pills
@@ -708,6 +818,31 @@
       pausePlayback();
       currentActIndex = -1;
       updateScene(targetSec);
+    });
+
+    // Webcam live preview toggle for real rehearsal
+    btnToggleWebcam.addEventListener('click', async () => {
+      if (webcamStream) {
+        // Turn off webcam
+        webcamStream.getTracks().forEach(t => t.stop());
+        webcamStream = null;
+        webcamFeed.style.display = 'none';
+        presenterPlaceholder.style.display = 'flex';
+        btnToggleWebcam.classList.remove('active');
+        camLabel.textContent = 'Enable Webcam Rehearsal';
+      } else {
+        // Request webcam
+        try {
+          webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 480, height: 480 } });
+          webcamFeed.srcObject = webcamStream;
+          webcamFeed.style.display = 'block';
+          presenterPlaceholder.style.display = 'none';
+          btnToggleWebcam.classList.add('active');
+          camLabel.textContent = 'Webcam Live (Active)';
+        } catch (err) {
+          alert('Could not access webcam: ' + err.message);
+        }
+      }
     });
   </script>
 </body>
