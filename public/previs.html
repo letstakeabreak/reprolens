@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ReproLens - 90s Demo Video Previs Player</title>
+  <title>ReproLens - 4MAT 90s Demo Video Previs Player</title>
   <style>
     :root {
       --bg: #000000;
@@ -123,8 +123,8 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 32px;
-      background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 65%, rgba(0,0,0,0.85) 100%);
+      padding: 28px 32px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.9) 100%);
       pointer-events: none;
     }
     .overlay-top {
@@ -132,32 +132,35 @@
       justify-content: space-between;
       align-items: flex-start;
     }
-    .cut-indicator {
-      background-color: rgba(0, 0, 0, 0.7);
+    .section-pill {
+      background-color: rgba(0, 0, 0, 0.75);
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 8px;
-      padding: 6px 12px;
+      padding: 6px 14px;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    .director-badge {
-      background-color: var(--error);
+    .criterion-badge {
+      background-color: #2F7CF6;
       color: #FFFFFF;
       font-size: 11px;
       font-weight: 700;
       padding: 4px 10px;
       border-radius: 999px;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
     }
     /* Subtitles / Teleprompter */
     .caption-box {
-      background-color: rgba(0, 0, 0, 0.85);
+      background-color: rgba(0, 0, 0, 0.88);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 10px;
-      padding: 12px 20px;
+      border-radius: 12px;
+      padding: 14px 24px;
       text-align: center;
-      max-width: 800px;
+      max-width: 860px;
       margin: 0 auto;
     }
     .caption-text {
@@ -165,14 +168,13 @@
       font-weight: 600;
       color: #FFFFFF;
       letter-spacing: -0.01em;
-      line-height: 1.4;
+      line-height: 1.45;
     }
-    .on-screen-tag {
+    .citation-tag {
       font-size: 11px;
-      color: var(--accent);
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      color: #79C0FF;
+      margin-top: 6px;
+      letter-spacing: 0.02em;
       font-weight: 600;
     }
     /* Controls Bar */
@@ -185,7 +187,7 @@
     }
     .timeline-track {
       width: 100%;
-      height: 6px;
+      height: 8px;
       background-color: var(--surface-light);
       border-radius: 999px;
       position: relative;
@@ -271,8 +273,8 @@
       border-top: 1px solid var(--divider);
     }
     .cut-pill {
-      height: 30px;
-      padding: 0 12px;
+      height: 32px;
+      padding: 0 14px;
       background-color: var(--surface-light);
       border: 1px solid var(--divider);
       border-radius: 999px;
@@ -282,11 +284,21 @@
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
     .cut-pill:hover, .cut-pill.active {
       background-color: rgba(47, 124, 246, 0.25);
       border-color: var(--accent);
       color: #FFFFFF;
+    }
+    .pill-pct {
+      font-size: 10px;
+      font-weight: 700;
+      background-color: rgba(255,255,255,0.15);
+      padding: 2px 6px;
+      border-radius: 999px;
     }
     /* Notes & Guide */
     .notes-grid {
@@ -329,7 +341,7 @@
   <header>
     <div class="logo-group">
       <span class="logo-text">ReproLens</span>
-      <span class="badge active">90s Previs Director Player</span>
+      <span class="badge active">4MAT 90s Previs Director Player</span>
     </div>
     <div style="display: flex; gap: 8px;">
       <a href="/" class="nav-btn">Studio Console</a>
@@ -340,76 +352,92 @@
   <div class="previs-viewport">
     <!-- Screen Stage (16:9) -->
     <div class="screen-stage" id="screen-stage">
-      <!-- Cut 1: The Painful Hook (Slack message + user bug recording) -->
+      <!-- 4MAT Act 1: Why (0:00 - 0:18, 20%) - Minwoo's Pain & 20.4% [Problem-Solution Clarity] -->
       <div class="slide-media active" id="slide-1" style="background: radial-gradient(circle at center, #1E1F24 0%, #0F1012 100%); display: flex; align-items: center; justify-content: center; flex-direction: column;">
-        <div style="background-color: #1F2123; border: 1px solid #38383A; border-radius: 12px; padding: 20px; width: 620px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
-            <div style="width: 32px; height: 32px; background-color: #E0382E; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700;">#</div>
-            <div>
-              <div style="font-weight: 700; font-size: 14px;">#customer-bugs</div>
-              <div style="font-size: 11px; color: #8E8E93;">Customer Support Lead &bull; 9:41 AM</div>
+        <div style="background-color: #1F2123; border: 1px solid #38383A; border-radius: 14px; padding: 24px; width: 680px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; background-color: #E0382E; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #FFF;">#</div>
+              <div>
+                <div style="font-weight: 700; font-size: 15px;">#customer-bugs</div>
+                <div style="font-size: 11px; color: #8E8E93;">Reported to Minwoo (Lead Frontend) &bull; 9:41 AM</div>
+              </div>
             </div>
+            <span style="font-size: 11px; font-weight: 700; background-color: rgba(224,56,46,0.2); color: #FF453A; padding: 3px 8px; border-radius: 4px;">UNRESOLVED TICKET</span>
           </div>
-          <p style="font-size: 15px; margin-bottom: 12px; color: #F5F5F7;">"Checkout button is completely frozen again. Customer sent an 8-second video clip."</p>
-          <div style="background-color: #0A0A0C; border-radius: 8px; padding: 12px; display: flex; align-items: center; gap: 12px; border: 1px dashed #48484A;">
-            <span style="font-size: 24px;">🎬</span>
-            <div>
+          <p style="font-size: 16px; margin-bottom: 14px; color: #F5F5F7;">"Checkout button is completely frozen again. Customer attached an 8-second video."</p>
+          <div style="background-color: #0A0A0C; border-radius: 8px; padding: 14px; display: flex; align-items: center; gap: 14px; border: 1px dashed #48484A;">
+            <span style="font-size: 26px;">🎬</span>
+            <div style="flex: 1;">
               <div style="font-size: 13px; font-weight: 600;">customer_checkout_fail_clip_8s.mp4</div>
-              <div style="font-size: 11px; color: #8E8E93;">"Cannot reproduce on my machine" &bull; 42% tickets lost</div>
+              <div style="font-size: 11px; color: #8E8E93; margin-top: 2px;">
+                <strong>20.4% of Sprint Time Lost</strong> to bug reproduction [Cambridge Judge, 2020]
+              </div>
             </div>
+            <span style="font-size: 11px; background-color: #2C2C2E; padding: 4px 8px; border-radius: 6px; color: #A1A1A6;">0:08</span>
           </div>
         </div>
       </div>
 
-      <!-- Cut 2: Hero Drop (ReproLens Studio & 2fps Frame Decomposition) -->
+      <!-- 4MAT Act 2: What (0:18 - 0:36, 20%) - Solution in One Sentence, One Screen [Problem-Solution Clarity] -->
       <div class="slide-media" id="slide-2" style="background: #000000; display: flex; align-items: center; justify-content: center;">
-        <img src="/extracted_frames/frame_001.jpg" style="width: 100%; height: 100%; object-fit: contain; filter: brightness(0.9);" alt="Drop Video">
+        <img src="/extracted_frames/frame_001.jpg" style="width: 100%; height: 100%; object-fit: contain; filter: brightness(0.95);" alt="ReproLens Studio One Screen">
       </div>
 
-      <!-- Cut 3: Climax - Playwright Code Synthesis & Live Terminal Stream -->
-      <div class="slide-media" id="slide-3" style="background: #121314; display: flex; align-items: center; justify-content: center; padding: 40px;">
-        <div style="width: 100%; max-width: 820px; background-color: #1F2123; border: 1px solid #38383A; border-radius: 12px; padding: 24px; font-family: monospace; font-size: 13px; line-height: 1.6; color: #E5E5E7;">
-          <div style="color: #2F7CF6; margin-bottom: 8px;">// Synthesized by ReproLens Vision Agent with Semantic Locators</div>
-          <div style="color: #FF7B72;">test<span style="color: #E5E5E7;">('reproduce checkout bug from video', </span><span style="color: #79C0FF;">async</span><span style="color: #E5E5E7;"> ({ page }) =&gt; {</span></div>
+      <!-- 4MAT Act 3: How (0:36 - 1:12, 40%) - Live Presentation Weapon [Technical Execution] -->
+      <div class="slide-media" id="slide-3" style="background: #121314; display: flex; align-items: center; justify-content: center; padding: 30px;">
+        <div style="width: 100%; max-width: 860px; background-color: #1F2123; border: 1px solid #38383A; border-radius: 12px; padding: 20px; font-family: monospace; font-size: 13px; line-height: 1.5; color: #E5E5E7;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid #2C2C2E; padding-bottom: 8px;">
+            <span style="color: #2F7CF6; font-weight: 700;">// Synthesized with Semantic Locators + Automated Fallback Chain</span>
+            <span style="color: #32D74B; font-size: 11px;">[RUNNER: PASS 3.21s]</span>
+          </div>
+          <div><span style="color: #FF7B72;">test</span>('reproduce checkout conflict bug', <span style="color: #79C0FF;">async</span> ({ page }) =&gt; {</div>
           <div style="padding-left: 20px;">
             <div><span style="color: #79C0FF;">await</span> page.<span style="color: #D2A8FF;">goto</span>('http://localhost:3000/checkout');</div>
             <div><span style="color: #79C0FF;">await</span> page.<span style="color: #7EE787;">getByPlaceholder</span>('Enter coupon code').<span style="color: #D2A8FF;">fill</span>('SUMMER2026');</div>
             <div><span style="color: #79C0FF;">await</span> page.<span style="color: #7EE787;">getByRole</span>('button', { name: 'Apply' }).<span style="color: #D2A8FF;">click</span>();</div>
             <div><span style="color: #79C0FF;">await</span> page.<span style="color: #7EE787;">getByLabel</span>('Redeem full loyalty points').<span style="color: #D2A8FF;">check</span>();</div>
             <div><span style="color: #79C0FF;">await</span> page.<span style="color: #7EE787;">getByRole</span>('button', { name: 'Place Order' }).<span style="color: #D2A8FF;">click</span>();</div>
-            <div><span style="color: #79C0FF;">await</span> <span style="color: #D2A8FF;">expect</span>(page.<span style="color: #7EE787;">getByRole</span>('alert')).<span style="color: #D2A8FF;">toBeVisible</span>();</div>
+            <div><span style="color: #79C0FF;">await</span> <span style="color: #D2A8FF;">expect</span>(page.<span style="color: #7EE787;">getByRole</span>('alert')).<span style="color: #D2A8FF;">toBeVisible</span>({ timeout: 5000 });</div>
           </div>
-          <div><span style="color: #E5E5E7;">});</span></div>
+          <div>});</div>
+          <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #2C2C2E; color: #32D74B; font-size: 12px;">
+            &gt; [+3.21s] Status: 100% REPRODUCED (Exact visual and Error 409 Conflict toast verified)
+          </div>
         </div>
       </div>
 
-      <!-- Cut 4: The Wow Resolution (100% Visual & State Reproduction) -->
-      <div class="slide-media" id="slide-4" style="background: #000000; display: flex; align-items: center; justify-content: center;">
-        <img src="/screenshots/reproduced_bug.png" style="width: 100%; height: 100%; object-fit: contain;" alt="Bug Reproduced">
-      </div>
+      <!-- 4MAT Act 4: What if (1:12 - 1:30, 20%) - Scale, Limits & Open Repo [Creativity & Impact] -->
+      <div class="slide-media" id="slide-4" style="background: radial-gradient(circle at center, #1B2B47 0%, #080D17 100%); display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center;">
+        <div style="font-family: 'SF Pro Display', sans-serif; font-size: 44px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em;">ReproLens</div>
+        <p style="font-size: 19px; color: #CCE1FC; margin-bottom: 20px;">Turn Every Bug Video into a CI/CD Regression Test Asset</p>
+        
+        <div style="background-color: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 14px 28px; margin-bottom: 16px; max-width: 640px;">
+          <div style="font-size: 13px; color: #A1A1A6; margin-bottom: 4px;">Honest Production Scope</div>
+          <div style="font-size: 14px; color: #FFFFFF;">Validated for HTML DOM forms, client interactions & visual state conflicts.</div>
+        </div>
 
-      <!-- Cut 5: Outro & Vision Title Card -->
-      <div class="slide-media" id="slide-5" style="background: radial-gradient(circle at center, #1B2B47 0%, #080D17 100%); display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center;">
-        <div style="font-family: 'SF Pro Display', sans-serif; font-size: 48px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em;">ReproLens</div>
-        <p style="font-size: 20px; color: #CCE1FC; margin-bottom: 24px;">Turn Bug Videos into CI/CD Regression Test Assets</p>
-        <div style="background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px; padding: 8px 24px; font-family: monospace; font-size: 14px; color: #FFFFFF;">
+        <div style="background-color: rgba(47, 124, 246, 0.15); border: 1px solid rgba(47, 124, 246, 0.4); border-radius: 999px; padding: 8px 24px; font-family: monospace; font-size: 14px; color: #FFFFFF;">
           github.com/letstakeabreak/reprolens
         </div>
-        <div style="margin-top: 16px; font-size: 13px; color: #8E8E93;">Built for c0mpiled-17: Seoul &bull; Y Combinator RFS</div>
       </div>
 
       <!-- Director's Overlay Details -->
       <div class="slide-content-overlay">
         <div class="overlay-top">
-          <div class="cut-indicator" id="cut-indicator">CUT 1: THE PAIN (00:00 - 00:18)</div>
-          <div class="director-badge" id="camera-note">SLOW ZOOM &bull; THE 20.4% SPRINT PAIN</div>
+          <div class="section-pill" id="cut-indicator">
+            <span id="act-name">WHY (20%)</span>
+            <span style="color: rgba(255,255,255,0.4);">&bull;</span>
+            <span id="act-time">00:00 - 00:18</span>
+          </div>
+          <div class="criterion-badge" id="criterion-badge">PROBLEM-SOLUTION CLARITY</div>
         </div>
 
         <div class="caption-box">
           <div class="caption-text" id="caption-text">
-            "Every software engineer dreads this Slack message: an eight-second video of an impossible-to-reproduce bug. You scrub back and forth trying to guess what the user clicked, wasting hours of your sprint."
+            "Meet Minwoo, a frontend engineer who loses 20.4% of every sprint trying to reproduce ambiguous bug reports like this: an eight-second smartphone clip with zero reproduction steps, eating up hours of guesswork."
           </div>
-          <div class="on-screen-tag" id="screen-tag">ON-SCREEN: 42% BUG TICKETS MARKED 'CANNOT REPRODUCE'</div>
+          <div class="citation-tag" id="citation-tag">[1] Cambridge Judge Business School (2020), The Financial and Time Costs of Software Debugging</div>
         </div>
       </div>
     </div>
@@ -421,10 +449,9 @@
         <div class="timeline-progress" id="timeline-progress"></div>
         <div class="timeline-cuts">
           <div class="cut-marker" style="width: 20%;"></div>
-          <div class="cut-marker" style="width: 19%;"></div>
-          <div class="cut-marker" style="width: 33%;"></div>
-          <div class="cut-marker" style="width: 17%;"></div>
-          <div class="cut-marker" style="width: 11%;"></div>
+          <div class="cut-marker" style="width: 20%;"></div>
+          <div class="cut-marker" style="width: 40%;"></div>
+          <div class="cut-marker" style="width: 20%;"></div>
         </div>
       </div>
 
@@ -432,7 +459,7 @@
         <div class="playback-buttons">
           <button type="button" class="btn-play" id="btn-toggle-play">
             <span id="play-icon">▶</span>
-            <span id="play-label">Play Full Previs (90s)</span>
+            <span id="play-label">Play 4MAT Previs (90s)</span>
           </button>
           <button type="button" class="btn-icon" id="btn-mute" title="Toggle Voiceover Audio">🔊</button>
           <button type="button" class="btn-icon" id="btn-reset" title="Restart">↺</button>
@@ -443,32 +470,46 @@
         </div>
       </div>
 
-      <!-- Jump Cut Pills -->
+      <!-- 4MAT Section Pills -->
       <div class="cut-pills">
-        <button type="button" class="cut-pill active" onclick="jumpToCut(0)">Cut 1: Hook (0:00)</button>
-        <button type="button" class="cut-pill" onclick="jumpToCut(1)">Cut 2: Drop & Vision (0:18)</button>
-        <button type="button" class="cut-pill" onclick="jumpToCut(2)">Cut 3: Code & Run (0:35)</button>
-        <button type="button" class="cut-pill" onclick="jumpToCut(3)">Cut 4: Wow Match (1:05)</button>
-        <button type="button" class="cut-pill" onclick="jumpToCut(4)">Cut 5: Outro & Repo (1:20)</button>
+        <button type="button" class="cut-pill active" onclick="jumpToAct(0)">
+          <span>Why: Problem Clarity</span>
+          <span class="pill-pct">20% &bull; 0:00</span>
+        </button>
+        <button type="button" class="cut-pill" onclick="jumpToAct(1)">
+          <span>What: Solution in One Screen</span>
+          <span class="pill-pct">20% &bull; 0:18</span>
+        </button>
+        <button type="button" class="cut-pill" onclick="jumpToAct(2)">
+          <span>How: Live Weapon Demo</span>
+          <span class="pill-pct">40% &bull; 0:36</span>
+        </button>
+        <button type="button" class="cut-pill" onclick="jumpToAct(3)">
+          <span>What if: Scale & Limits</span>
+          <span class="pill-pct">20% &bull; 1:12</span>
+        </button>
       </div>
     </div>
 
-    <!-- Director Notes & Live Video Reference -->
+    <!-- Director Notes & 4MAT Checklist -->
     <div class="notes-grid">
       <div class="notes-card">
         <div class="notes-title">
-          <span>🎬</span>
-          <span>Director's Previs Execution Notes</span>
+          <span>🎯</span>
+          <span>4MAT Hackathon Structure & Criteria Mapping</span>
         </div>
         <div class="notes-content">
           <p style="margin-bottom: 8px;">
-            <strong>Pacing Rule</strong>: 90 seconds strictly. No introductory filler, no "Hello judges". Hook with the real developer pain in the first 5 seconds.
+            <strong>Why (20% | 0:00~0:18)</strong>: Minwoo's real pain. Verified number: <strong>20.4% sprint loss</strong> [Cambridge Judge, 2020]. No greetings. -> <em>Problem Clarity</em>
           </p>
           <p style="margin-bottom: 8px;">
-            <strong>The Wow Moment (00:40 ~ 01:10)</strong>: When the Playwright code synthesizes and the headless browser automatically types, clicks, and hits the exact 409 Conflict error, emphasize that <strong>zero client SDKs</strong> were installed in production code.
+            <strong>What (20% | 0:18~0:36)</strong>: One sentence ("video to Playwright code with zero SDKs") and only ONE screen (Studio). -> <em>Problem-Solution Clarity</em>
+          </p>
+          <p style="margin-bottom: 8px;">
+            <strong>How (40% | 0:36~1:12)</strong>: Live presentation weapon. Drops video, decomposes keyframes, synthesizes code, runs in headless browser in 3.21s with Error 409 verified. -> <em>Technical Execution</em>
           </p>
           <p>
-            <strong>Call-To-Action (01:25)</strong>: Point judges to the live working GitHub repository at <code>letstakeabreak/reprolens</code>.
+            <strong>What if (20% | 1:12~1:30)</strong>: Impact at scale, honest limits (HTML DOM vs canvas/backend), and GitHub repository link. -> <em>Creativity & Impact</em>
           </p>
         </div>
       </div>
@@ -476,10 +517,10 @@
       <div class="notes-card">
         <div class="notes-title">
           <span>📹</span>
-          <span>Captured Walkthrough Asset</span>
+          <span>Walkthrough Video Asset</span>
         </div>
         <div class="notes-content">
-          <p style="margin-bottom: 8px;">High-resolution MP4 asset ready for voiceover overlay:</p>
+          <p style="margin-bottom: 8px;">High-resolution 1440x900 MP4 asset ready for recording:</p>
           <p style="font-family: monospace; font-size: 11px; background-color: var(--surface-light); padding: 6px; border-radius: 6px; word-break: break-all;">
             public/reprolens_demo_walkthrough.mp4
           </p>
@@ -494,51 +535,46 @@
   </div>
 
   <script>
-    const CUTS = [
+    const ACTS = [
       {
         id: 1,
+        name: "WHY (20%)",
+        timeRange: "00:00 - 00:18",
         startTime: 0,
         endTime: 18,
-        label: "CUT 1: THE PAIN (00:00 - 00:18)",
-        camera: "SLOW ZOOM • THE 20.4% SPRINT PAIN",
-        tag: "ON-SCREEN: 42% BUG TICKETS MARKED 'CANNOT REPRODUCE'",
-        script: "Every software engineer dreads this Slack message: an eight-second video of an impossible-to-reproduce bug. You scrub back and forth trying to guess what the user clicked, wasting hours of your sprint."
+        criterion: "PROBLEM-SOLUTION CLARITY",
+        citation: "[1] Cambridge Judge Business School (2020), The Financial and Time Costs of Software Debugging",
+        script: "Meet Minwoo, a frontend engineer who loses 20.4% of every sprint trying to reproduce ambiguous bug reports like this: an eight-second smartphone clip with zero reproduction steps, eating up hours of guesswork."
       },
       {
         id: 2,
+        name: "WHAT (20%)",
+        timeRange: "00:18 - 00:36",
         startTime: 18,
-        endTime: 35,
-        label: "CUT 2: HERO ARRIVAL (00:18 - 00:35)",
-        camera: "STUDIO DROP • 2FPS KEYFRAME DECOMPOSITION",
-        tag: "ON-SCREEN: ZERO CLIENT-SIDE SDK REQUIRED",
-        script: "Meet ReproLens. Drop the raw video recording into ReproLens Studio. No client SDKs, no browser extensions. In seconds, our multimodal vision pipeline samples keyframes at two frames per second to isolate the exact interaction sequence."
+        endTime: 36,
+        criterion: "PROBLEM-SOLUTION CLARITY",
+        citation: "Solution in One Sentence: Pure Video In -> Playwright Spec Out | Zero Client SDKs",
+        script: "Meet ReproLens. ReproLens transforms raw ten-second bug recordings into executable, self-contained Playwright test specs with zero client-side SDKs. No production tracking libraries, no browser extensions. Just the video you already have."
       },
       {
         id: 3,
-        startTime: 35,
-        endTime: 65,
-        label: "CUT 3: CODE CLIMAX (00:35 - 01:05)",
-        camera: "CODE PAN & TERMINAL STREAM • AST SYNTHESIS",
-        tag: "ON-SCREEN: SEMANTIC LOCATORS + AUTOMATED FALLBACK CHAINS",
-        script: "ReproLens instantly synthesizes an executable Playwright test spec. Notice the resilient semantic locators—getByPlaceholder, getByRole, and getByLabel—complete with automated fallback chains. Watch as our headless runner drives the browser through the exact user flow."
+        name: "HOW (40%)",
+        timeRange: "00:36 - 01:12",
+        startTime: 36,
+        endTime: 72,
+        criterion: "TECHNICAL EXECUTION",
+        citation: "Core Presentation Weapon: 3.21s Reproduction | Semantic Locators + Fallback Chains",
+        script: "Watch it work live. We drop the checkout conflict video. Our pipeline samples keyframes at two frames per second, mapping UI transitions into a structured action sequence. ReproLens synthesizes a robust Playwright spec with semantic locators and automated fallback chains. We click Run. In just 3.2 seconds, headless Chromium recreates the exact Error 409 Conflict state on our local app with 100% visual match."
       },
       {
         id: 4,
-        startTime: 65,
-        endTime: 80,
-        label: "CUT 4: WOW RESOLUTION (01:05 - 01:20)",
-        camera: "SPLIT COMPARISON • 100% VISUAL & STATE MATCH",
-        tag: "ON-SCREEN: BUG REPRODUCED IN 3.21 SECONDS",
-        script: "In just 3.2 seconds, the bug is reproduced with a 100% visual and state match. The identical Error 409 Conflict toast appears, captured and verified automatically."
-      },
-      {
-        id: 5,
-        startTime: 80,
+        name: "WHAT IF (20%)",
+        timeRange: "01:12 - 01:30",
+        startTime: 72,
         endTime: 90,
-        label: "CUT 5: OUTRO & VISION (01:20 - 01:30)",
-        camera: "TITLE OUTRO • CI/CD ASSET CREATION",
-        tag: "ON-SCREEN: GITHUB.COM/LETSTAKEABREAK/REPROLENS",
-        script: "No SDKs in production. No guesswork. Turn every vague user bug report into an instant regression test asset. This is ReproLens."
+        criterion: "CREATIVITY & IMPACT",
+        citation: "Honest Scope: Standard HTML DOM & Visual State Conflicts | github.com/letstakeabreak/reprolens",
+        script: "What if every bug report became an instant regression test in your CI pipeline? Today, ReproLens masters standard web interfaces and state conflicts. No guesswork, no wasted sprints. Check out the open-source repository at github.com/letstakeabreak/reprolens. This is ReproLens."
       }
     ];
 
@@ -546,7 +582,7 @@
     let isPlaying = false;
     let timerId = null;
     let isMuted = false;
-    let currentCutIndex = 0;
+    let currentActIndex = -1;
 
     const btnTogglePlay = document.getElementById('btn-toggle-play');
     const playIcon = document.getElementById('play-icon');
@@ -555,10 +591,11 @@
     const btnReset = document.getElementById('btn-reset');
     const currentTimeEl = document.getElementById('current-time');
     const timelineProgress = document.getElementById('timeline-progress');
-    const cutIndicator = document.getElementById('cut-indicator');
-    const cameraNote = document.getElementById('camera-note');
+    const actName = document.getElementById('act-name');
+    const actTime = document.getElementById('act-time');
+    const criterionBadge = document.getElementById('criterion-badge');
     const captionText = document.getElementById('caption-text');
-    const screenTag = document.getElementById('screen-tag');
+    const citationTag = document.getElementById('citation-tag');
     const cutPills = document.querySelectorAll('.cut-pill');
 
     function formatTime(s) {
@@ -582,28 +619,31 @@
       const pct = (sec / 90) * 100;
       timelineProgress.style.width = `${pct}%`;
 
-      const cutIndex = CUTS.findIndex(c => sec >= c.startTime && sec < c.endTime);
-      const activeCut = cutIndex !== -1 ? CUTS[cutIndex] : CUTS[CUTS.length - 1];
+      const actIndex = ACTS.findIndex(a => sec >= a.startTime && sec < a.endTime);
+      const activeAct = actIndex !== -1 ? ACTS[actIndex] : ACTS[ACTS.length - 1];
+      const validIndex = actIndex !== -1 ? actIndex : ACTS.length - 1;
 
-      if (cutIndex !== -1 && cutIndex !== currentCutIndex) {
-        currentCutIndex = cutIndex;
-        // Switch slides
-        for (let i = 1; i <= 5; i++) {
+      if (validIndex !== currentActIndex) {
+        currentActIndex = validIndex;
+
+        // Switch slides (1 to 4)
+        for (let i = 1; i <= 4; i++) {
           const s = document.getElementById(`slide-${i}`);
-          if (s) s.classList.toggle('active', i === (cutIndex + 1));
+          if (s) s.classList.toggle('active', i === (validIndex + 1));
         }
 
         // Update pills
-        cutPills.forEach((p, idx) => p.classList.toggle('active', idx === cutIndex));
+        cutPills.forEach((p, idx) => p.classList.toggle('active', idx === validIndex));
 
-        // Update text
-        cutIndicator.textContent = activeCut.label;
-        cameraNote.textContent = activeCut.camera;
-        captionText.textContent = `"${activeCut.script}"`;
-        screenTag.textContent = activeCut.tag;
+        // Update overlay text
+        actName.textContent = activeAct.name;
+        actTime.textContent = activeAct.timeRange;
+        criterionBadge.textContent = activeAct.criterion;
+        captionText.textContent = `"${activeAct.script}"`;
+        citationTag.textContent = activeAct.citation;
 
         if (isPlaying) {
-          speakScript(activeCut.script);
+          speakScript(activeAct.script);
         }
       }
     }
@@ -611,8 +651,9 @@
     function startPlayback() {
       isPlaying = true;
       playIcon.textContent = '❚❚';
-      playLabel.textContent = 'Pause Previs';
-      speakScript(CUTS[currentCutIndex].script);
+      playLabel.textContent = 'Pause 4MAT Previs';
+      const targetAct = currentActIndex >= 0 ? ACTS[currentActIndex] : ACTS[0];
+      speakScript(targetAct.script);
 
       timerId = setInterval(() => {
         if (currentSec >= 90) {
@@ -628,7 +669,7 @@
     function pausePlayback() {
       isPlaying = false;
       playIcon.textContent = '▶';
-      playLabel.textContent = 'Play Full Previs (90s)';
+      playLabel.textContent = 'Play 4MAT Previs (90s)';
       clearInterval(timerId);
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     }
@@ -640,7 +681,7 @@
 
     btnReset.addEventListener('click', () => {
       pausePlayback();
-      currentCutIndex = -1;
+      currentActIndex = -1;
       updateScene(0);
     });
 
@@ -652,10 +693,10 @@
       }
     });
 
-    function jumpToCut(idx) {
+    function jumpToAct(idx) {
       pausePlayback();
-      currentCutIndex = -1;
-      const targetTime = CUTS[idx].startTime;
+      currentActIndex = -1;
+      const targetTime = ACTS[idx].startTime;
       updateScene(targetTime);
     }
 
@@ -665,7 +706,7 @@
       const pct = clickX / rect.width;
       const targetSec = pct * 90;
       pausePlayback();
-      currentCutIndex = -1;
+      currentActIndex = -1;
       updateScene(targetSec);
     });
   </script>
