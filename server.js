@@ -29,6 +29,11 @@ app.get('/spec', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'spec.html'));
 });
 
+// Route for 90s Demo Video Previs Player
+app.get('/previs', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'previs.html'));
+});
+
 // API: Get sample video info
 app.get('/api/sample-video', (req, res) => {
   const samplePath = path.join(__dirname, 'public', 'sample_videos', 'sample_bug.mp4');
