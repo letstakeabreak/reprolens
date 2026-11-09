@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReproLens Studio - Vision-to-Code Bug Reproduction Agent</title>
+  <style>
+    :root {
+      --bg: #FFFFFF;
+      --surface: #F5F5F7;
+      --text-primary: #1F2123;
+      --text-secondary: #6E6E73;
+      --text-tertiary: #8E8E93;
+      --divider: #E5E5E7;
+      --accent: #0B65DF;
+      --accent-hover: #0A58C2;
+      --error: #E0382E;
+      --success: #288C44;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text-primary);
+      font-family: "SF Pro Text", "SF Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      line-height: 1.6;
+    }
+    header {
+      height: 56px;
+      background-color: var(--bg);
+      border-bottom: 1px solid var(--divider);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo-text {
+      font-family: "SF Pro Display", sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background-color: var(--surface);
+      color: var(--text-secondary);
+      border: 1px solid var(--divider);
+    }
+    .badge.active {
+      background-color: #EBF3FE;
+      color: var(--accent);
+      border-color: #CCE1FC;
+    }
+    .main-container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 32px 24px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+    }
+    @media (max-width: 1024px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+    }
+    .column {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .card {
+      background-color: var(--surface);
+      border-radius: 18px;
+      padding: 24px;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+    }
+    .card-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+    .video-wrapper {
+      background-color: #000000;
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .reel-container {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+    .reel-item {
+      flex: 0 0 120px;
+      background-color: var(--bg);
+      border: 1px solid var(--divider);
+      border-radius: 8px;
+      overflow: hidden;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+      padding-bottom: 4px;
+    }
+    .reel-item img {
+      width: 100%;
+      height: 68px;
+      object-fit: cover;
+      display: block;
+      margin-bottom: 4px;
+    }
+    .code-editor-container {
+      background-color: #1F2123;
+      border-radius: 12px;
+      padding: 16px;
+      color: #F5F5F7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-x: auto;
+      max-height: 380px;
+      white-space: pre;
+    }
+    .terminal-container {
+      background-color: #121314;
+      border-radius: 12px;
+      padding: 16px;
+      color: #D1D1D6;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      height: 180px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      border: 1px solid #2C2C2E;
+    }
+    .btn-primary {
+      height: 48px;
+      background-color: var(--accent);
+      color: #FFFFFF;
+      border: none;
+      border-radius: 999px;
+      padding: 0 24px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 0.15s ease;
+      width: 100%;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background-color: var(--accent-hover);
+    }
+    .btn-primary:disabled {
+      background-color: var(--text-tertiary);
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      height: 40px;
+      background-color: var(--bg);
+      color: var(--text-primary);
+      border: 1px solid var(--divider);
+      border-radius: 10px;
+      padding: 0 16px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .btn-secondary:hover {
+      background-color: #ECECEE;
+    }
+    .result-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .result-box {
+      background-color: var(--bg);
+      border: 1px solid var(--divider);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+    .result-box-title {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .result-box img {
+      width: 100%;
+      border-radius: 6px;
+      display: block;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+    .status-pill.success {
+      background-color: #E8F5E9;
+      color: var(--success);
+    }
+    .status-pill.pending {
+      background-color: #FFF3E0;
+      color: #E65100;
+    }
+    .action-step-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background-color: var(--bg);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      font-size: 14px;
+      border: 1px solid var(--divider);
+    }
+    .step-badge {
+      width: 24px;
+      height: 24px;
+      background-color: var(--surface);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 12px;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .step-text {
+      flex: 1;
+    }
+    .step-time {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo-group">
+      <span class="logo-text">ReproLens</span>
+      <span class="badge active">c0mpiled-17 Live</span>
+    </div>
+    <div>
+      <a href="/checkout" target="_blank" class="btn-secondary" style="text-decoration: none; display: inline-flex; align-items: center;">
+        Open Checkout App
+      </a>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- Left Column: Video Input & Frame Analysis -->
+    <div class="column">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">1. User Bug Recording</span>
+          <span id="video-status" class="badge">Sample Video Ready</span>
+        </div>
+        <p class="card-desc">7-second screen recording submitted by a user where checkout freezes indefinitely.</p>
+        
+        <div class="video-wrapper">
+          <video id="bug-video" controls playsinline>
+            <source src="/sample_videos/sample_bug.mp4" type="video/mp4">
+            Your browser does not support HTML5 video.
+          </video>
+        </div>
+
+        <button type="button" id="btn-analyze" class="btn-primary">
+          <span id="analyze-btn-text">Analyze Video & Synthesize Playwright Spec</span>
+        </button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">2. Extracted Keyframe Timeline</span>
+          <span id="frame-count-badge" class="badge">0 Frames</span>
+        </div>
+        <p class="card-desc">FFmpeg samples keyframes at 2fps to isolate exact visual state transitions.</p>
+        <div id="reel-container" class="reel-container">
+          <div style="padding: 24px 0; color: var(--text-tertiary); font-size: 14px; text-align: center; width: 100%;">
+            Click 'Analyze Video & Synthesize Playwright Spec' above to extract frames.
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">3. Detected User Action Sequence</span>
+        </div>
+        <p class="card-desc">Normalized interaction sequence inferred frame-by-frame by the multimodal vision model.</p>
+        <div id="action-steps-container">
+          <div style="color: var(--text-tertiary); font-size: 14px; padding: 12px 0;">
+            Interaction steps will appear here after analysis.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Code Synthesis & Live Reproduction -->
+    <div class="column">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">4. Synthesized Playwright Test Spec</span>
+          <button type="button" id="btn-copy-code" class="btn-secondary">Copy Code</button>
+        </div>
+        <p class="card-desc">Self-contained, production-grade Playwright E2E script with zero external SDK dependencies.</p>
+        
+        <div id="code-editor" class="code-editor-container">// Playwright code synthesized from video frames will appear here.
+// await page.goto('/checkout');
+// await page.getByPlaceholder('Enter coupon code').fill('SUMMER2026');
+// await page.getByRole('button', { name: 'Apply' }).click();
+// await page.getByLabel('Redeem full loyalty points').check();
+// await page.getByRole('button', { name: 'Place Order' }).click();
+// await expect(page.getByRole('alert')).toBeVisible();</div>
+
+        <div style="margin-top: 16px;">
+          <button type="button" id="btn-run-test" class="btn-primary" disabled>
+            <span id="run-btn-text">Run Reproduction in Headless Browser</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">5. Live Runner Terminal & Visual Verification</span>
+          <span id="repro-status-badge" class="status-pill pending">Idle</span>
+        </div>
+        <p class="card-desc">Headless Chromium replicates the exact user sequence to confirm bug reproducibility.</p>
+        
+        <div id="terminal" class="terminal-container">[SYSTEM] ReproLens Headless Runner ready.
+[SYSTEM] Awaiting test execution...</div>
+
+        <div class="result-split">
+          <div class="result-box">
+            <div class="result-box-title">Original Bug Recording (Input)</div>
+            <img id="ref-frame-img" src="/extracted_frames/frame_013.jpg" alt="Original Frame" onerror="this.style.opacity='0.3'">
+          </div>
+          <div class="result-box">
+            <div class="result-box-title">Recreated Browser Bug (Output)</div>
+            <img id="reproduced-img" src="/screenshots/reproduced_bug.png" alt="Reproduced State" onerror="this.style.opacity='0.3'">
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const btnAnalyze = document.getElementById('btn-analyze');
+    const analyzeBtnText = document.getElementById('analyze-btn-text');
+    const frameCountBadge = document.getElementById('frame-count-badge');
+    const reelContainer = document.getElementById('reel-container');
+    const actionStepsContainer = document.getElementById('action-steps-container');
+    const codeEditor = document.getElementById('code-editor');
+    const btnCopyCode = document.getElementById('btn-copy-code');
+    const btnRunTest = document.getElementById('btn-run-test');
+    const runBtnText = document.getElementById('run-btn-text');
+    const terminal = document.getElementById('terminal');
+    const reproStatusBadge = document.getElementById('repro-status-badge');
+    const refFrameImg = document.getElementById('ref-frame-img');
+    const reproducedImg = document.getElementById('reproduced-img');
+
+    let currentActions = null;
+
+    btnAnalyze.addEventListener('click', async () => {
+      btnAnalyze.disabled = true;
+      analyzeBtnText.textContent = 'Extracting Frames & Analyzing Vision...';
+      
+      try {
+        // Step 1: Extract frames
+        const frameRes = await fetch('/api/extract-frames', { method: 'POST' });
+        const frameData = await frameRes.json();
+        
+        if (frameData.frames && frameData.frames.length > 0) {
+          frameCountBadge.textContent = `${frameData.frames.length} Frames`;
+          reelContainer.innerHTML = '';
+          frameData.frames.forEach(f => {
+            const item = document.createElement('div');
+            item.className = 'reel-item';
+            item.innerHTML = `<img src="${f.url}" alt="${f.timestamp}"><div>${f.timestamp}</div>`;
+            reelContainer.appendChild(item);
+          });
+          if (frameData.frames.length >= 13) {
+            refFrameImg.src = frameData.frames[12].url;
+            refFrameImg.style.opacity = '1';
+          }
+        }
+
+        // Step 2: Vision Analysis & Synthesize code
+        analyzeBtnText.textContent = 'Synthesizing Playwright Test Spec...';
+        const synthRes = await fetch('/api/synthesize', { method: 'POST' });
+        const synthData = await synthRes.json();
+
+        if (synthData.code) {
+          codeEditor.textContent = synthData.code;
+          currentActions = synthData.analysis.detectedActions;
+
+          // Render detected steps
+          actionStepsContainer.innerHTML = '';
+          currentActions.forEach(act => {
+            const stepEl = document.createElement('div');
+            stepEl.className = 'action-step-item';
+            stepEl.innerHTML = `
+              <div class="step-badge">${act.step}</div>
+              <div class="step-text">
+                <div style="font-weight: 600;">${act.label}</div>
+                <div style="font-size: 13px; color: var(--text-secondary);">${act.description}</div>
+              </div>
+              <div class="step-time">${act.timestamp}</div>
+            `;
+            actionStepsContainer.appendChild(stepEl);
+          });
+
+          btnRunTest.disabled = false;
+          analyzeBtnText.textContent = 'Analysis & Code Synthesis Complete';
+        }
+      } catch (err) {
+        alert('Error during analysis: ' + err.message);
+        analyzeBtnText.textContent = 'Try Again';
+        btnAnalyze.disabled = false;
+      }
+    });
+
+    btnCopyCode.addEventListener('click', () => {
+      navigator.clipboard.writeText(codeEditor.textContent);
+      btnCopyCode.textContent = 'Copied!';
+      setTimeout(() => { btnCopyCode.textContent = 'Copy Code'; }, 2000);
+    });
+
+    btnRunTest.addEventListener('click', async () => {
+      btnRunTest.disabled = true;
+      runBtnText.textContent = 'Executing in Headless Browser...';
+      terminal.textContent = '[RUNNER] Starting Playwright test execution...\n';
+      reproStatusBadge.className = 'status-pill pending';
+      reproStatusBadge.textContent = 'Running';
+
+      try {
+        const res = await fetch('/api/run-reproduce', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ detectedActions: currentActions })
+        });
+        const result = await res.json();
+
+        if (result.logs) {
+          terminal.textContent = result.logs.join('\n');
+          terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        if (result.success && result.status === 'REPRODUCED') {
+          reproStatusBadge.className = 'status-pill success';
+          reproStatusBadge.textContent = '100% Reproduced';
+          reproducedImg.src = result.screenshotUrl + '?t=' + Date.now();
+          reproducedImg.style.opacity = '1';
+        } else {
+          reproStatusBadge.className = 'status-pill';
+          reproStatusBadge.style.backgroundColor = '#FDEDED';
+          reproStatusBadge.style.color = '#E0382E';
+          reproStatusBadge.textContent = 'Failed';
+        }
+      } catch (err) {
+        terminal.textContent += `\n[ERROR] ${err.message}`;
+      } finally {
+        btnRunTest.disabled = false;
+        runBtnText.textContent = 'Rerun Reproduction';
+      }
+    });
+  </script>
+</body>
+</html>
